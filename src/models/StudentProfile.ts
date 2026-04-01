@@ -38,6 +38,12 @@ export interface IStudentProfile extends Document {
     isCurrentRole: boolean;
     description: string;
   }[];
+  links: {
+    linkedin?: string;
+    github?: string;
+    portfolio?: string;
+    leetcode?: string;
+  };
   createdAt: Date;
   updatedAt: Date;
 }
@@ -152,6 +158,12 @@ const StudentProfileSchema = new Schema<IStudentProfile>(
         description: { type: String, required: true, trim: true },
       },
     ],
+    links: {
+      linkedin: { type: String, trim: true },
+      github: { type: String, trim: true },
+      portfolio: { type: String, trim: true },
+      leetcode: { type: String, trim: true },
+    },
   },
   {
     timestamps: true,
