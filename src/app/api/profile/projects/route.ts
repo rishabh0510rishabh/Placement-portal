@@ -6,17 +6,7 @@ import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import connectDB from '@/lib/mongodb';
 import StudentProfile from '@/models/StudentProfile';
 
-const VALID_CATEGORIES = [
-  'programmingLanguages',
-  'frameworks',
-  'tools',
-  'databases',
-  'technologies',
-] as const;
-
-type SkillCategory = (typeof VALID_CATEGORIES)[number];
-
-// GET /api/profile/skills
+// GET /api/profile/projects
 export async function GET() {
   const session = await getServerSession(authOptions);
   if (!session?.user) {
@@ -28,7 +18,7 @@ export async function GET() {
   const profile = await StudentProfile.findOne({
     userId: (session.user as { id: string }).id,
   })
-    .select('skills')
+    .select('projects')
     .lean();
 
   if (!profile) {
@@ -39,20 +29,12 @@ export async function GET() {
   }
 
   return NextResponse.json(
-    {
-      skills: profile.skills ?? {
-        programmingLanguages: [],
-        frameworks: [],
-        tools: [],
-        databases: [],
-        technologies: [],
-      },
-    },
+    { projects: profile.projects || [] },
     { status: 200 }
   );
 }
 
-// POST /api/profile/skills
+// POST /api/profile/projects
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session?.user) {
@@ -62,23 +44,32 @@ export async function POST(req: NextRequest) {
   const userId = (session.user as { id: string }).id;
   const body = await req.json();
 
-  // Validate each category is an array of strings
-  const sanitised: Partial<Record<SkillCategory, string[]>> = {};
+  const { projects } = body;
 
-  for (const cat of VALID_CATEGORIES) {
-    const raw = body[cat];
-    if (raw !== undefined) {
-      if (!Array.isArray(raw)) {
-        return NextResponse.json(
-          { error: `"${cat}" must be an array of strings.` },
-          { status: 400 }
-        );
-      }
-      sanitised[cat] = (raw as unknown[])
-        .map((s) => String(s).trim())
-        .filter((s) => s.length > 0);
-    } else {
-      sanitised[cat] = [];
+  if (!Array.isArray(projects)) {
+    return NextResponse.json(
+      { error: 'Invalid data format. Expected an array of projects.' },
+      { status: 400 }
+    );
+  }
+
+  // Validate fields for each project
+  const sanitizedProjects = projects.map((p: any) => ({
+    title: String(p.title || '').trim(),
+    description: String(p.description || '').trim(),
+    technologies: Array.isArray(p.technologies)
+      ? p.technologies.map((t: any) => String(t).trim()).filter((t: string) => t)
+      : [],
+    githubLink: p.githubLink ? String(p.githubLink).trim() : undefined,
+  }));
+
+  // Check required fields
+  for (const p of sanitizedProjects) {
+    if (!p.title || !p.description) {
+      return NextResponse.json(
+        { error: 'Title and description are required for all projects.' },
+        { status: 400 }
+      );
     }
   }
 
@@ -87,9 +78,9 @@ export async function POST(req: NextRequest) {
   try {
     const profile = await StudentProfile.findOneAndUpdate(
       { userId },
-      { $set: { skills: sanitised } },
+      { $set: { projects: sanitizedProjects } },
       { new: true, runValidators: true }
-    ).select('skills');
+    ).select('projects');
 
     if (!profile) {
       return NextResponse.json(
@@ -99,13 +90,13 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json(
-      { message: 'Skills saved successfully.', skills: profile.skills },
+      { message: 'Projects saved successfully.', projects: profile.projects },
       { status: 200 }
     );
-  } catch (error: unknown) {
-    console.error('Skills save error:', error);
+  } catch (error: any) {
+    console.error('Projects save error:', error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Internal server error.' },
+      { error: error.message || 'Internal server error.' },
       { status: 500 }
     );
   }

@@ -22,6 +22,13 @@ export interface IStudentProfile extends Document {
     databases: string[];
     technologies: string[];
   };
+  projects: {
+    _id?: mongoose.Types.ObjectId;
+    title: string;
+    description: string;
+    technologies: string[];
+    githubLink?: string;
+  }[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -118,6 +125,14 @@ const StudentProfileSchema = new Schema<IStudentProfile>(
       databases:            { type: [String], default: [] },
       technologies:         { type: [String], default: [] },
     },
+    projects: [
+      {
+        title: { type: String, required: true, trim: true },
+        description: { type: String, required: true, trim: true },
+        technologies: { type: [String], default: [] },
+        githubLink: { type: String, trim: true },
+      },
+    ],
   },
   {
     timestamps: true,
