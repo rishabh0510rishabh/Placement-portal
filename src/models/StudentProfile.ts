@@ -29,6 +29,15 @@ export interface IStudentProfile extends Document {
     technologies: string[];
     githubLink?: string;
   }[];
+  experience: {
+    _id?: mongoose.Types.ObjectId;
+    company: string;
+    role: string;
+    startDate: Date;
+    endDate?: Date;
+    isCurrentRole: boolean;
+    description: string;
+  }[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -131,6 +140,16 @@ const StudentProfileSchema = new Schema<IStudentProfile>(
         description: { type: String, required: true, trim: true },
         technologies: { type: [String], default: [] },
         githubLink: { type: String, trim: true },
+      },
+    ],
+    experience: [
+      {
+        company: { type: String, required: true, trim: true },
+        role: { type: String, required: true, trim: true },
+        startDate: { type: Date, required: true },
+        endDate: { type: Date },
+        isCurrentRole: { type: Boolean, default: false },
+        description: { type: String, required: true, trim: true },
       },
     ],
   },
