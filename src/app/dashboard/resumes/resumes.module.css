@@ -1,0 +1,169 @@
+.contentArea {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.currentResumeBox {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px;
+  background: rgba(79, 70, 229, 0.05);
+  border: 1px solid rgba(79, 70, 229, 0.2);
+  border-radius: 12px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.resumeInfo {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.fileIcon {
+  color: var(--primary-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(79, 70, 229, 0.1);
+  padding: 12px;
+  border-radius: 10px;
+}
+
+.fileDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.filename {
+  font-weight: 600;
+  font-size: 1.1rem;
+  color: var(--text-primary);
+  margin: 0;
+  word-break: break-all;
+}
+
+.uploadDate {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.resumeActions {
+  display: flex;
+  gap: 12px;
+}
+
+.noResumeState {
+  padding: 32px;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 12px;
+  border: 1px dashed var(--border);
+  color: var(--text-secondary);
+}
+
+.sectionTitle {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 16px 0;
+}
+
+.uploadForm {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.uploadDropzone {
+  border: 2px dashed rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  padding: 48px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: rgba(255, 255, 255, 0.01);
+}
+
+.uploadDropzone:hover, .uploadDropzone.fileSelected {
+  border-color: var(--primary-light);
+  background: rgba(79, 70, 229, 0.03);
+}
+
+.hiddenInput {
+  display: none;
+}
+
+.dropzoneContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  color: var(--text-secondary);
+}
+
+.uploadIcon {
+  width: 48px;
+  height: 48px;
+  color: rgba(255, 255, 255, 0.4);
+  transition: color 0.2s ease;
+}
+
+.uploadDropzone:hover .uploadIcon {
+  color: var(--primary-light);
+}
+
+.selectedFileDisplay {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.selectedName {
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.selectedSize {
+  font-size: 0.85rem;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 2px 8px;
+  border-radius: 12px;
+  display: inline-block;
+  margin: 0 auto;
+}
+
+.uploadTextPrompt {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.primaryText {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.browseLink {
+  color: var(--primary-light);
+  font-weight: 500;
+}
+
+.secondaryText {
+  margin: 0;
+  font-size: 0.85rem;
+  opacity: 0.7;
+}
+
+.actionRight {
+  justify-content: flex-end;
+}
+
+.spinnerMargin {
+  margin-right: 8px;
+}

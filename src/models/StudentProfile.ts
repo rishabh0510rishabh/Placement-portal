@@ -44,6 +44,11 @@ export interface IStudentProfile extends Document {
     portfolio?: string;
     leetcode?: string;
   };
+  resume?: {
+    filename: string;
+    url: string;
+    uploadedAt: Date;
+  };
   createdAt: Date;
   updatedAt: Date;
 }
@@ -163,6 +168,11 @@ const StudentProfileSchema = new Schema<IStudentProfile>(
       github: { type: String, trim: true },
       portfolio: { type: String, trim: true },
       leetcode: { type: String, trim: true },
+    },
+    resume: {
+      filename: { type: String, trim: true },
+      url:      { type: String, trim: true },
+      uploadedAt: { type: Date }
     },
   },
   {
