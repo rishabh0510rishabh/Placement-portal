@@ -6,6 +6,7 @@ export interface IJobListing extends Document {
   description: string;
   minimumCgpa: number;
   allowedBranches: string[];
+  requiredSkills: string[];
   maximumBacklogs: number;
   salaryCtc: string;
   ctcBreakdown: string;
@@ -23,6 +24,7 @@ const JobListingSchema: Schema<IJobListing> = new Schema(
     description: { type: String, required: true },
     minimumCgpa: { type: Number, required: true, min: 0, max: 10 },
     allowedBranches: [{ type: String, required: true }],
+    requiredSkills: [{ type: String }],
     maximumBacklogs: { type: Number, required: true, min: 0 },
     salaryCtc: { type: String, required: true },
     ctcBreakdown: { type: String, trim: true },
