@@ -103,3 +103,68 @@ export async function GET(
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
+
+export async function PUT(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const session = await getServerSession(authOptions);
+  if (!session?.user || (session.user as any).role !== 'admin') {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const resolvedParams = await params;
+  const jobId = resolvedParams.id;
+  
+  if (!jobId) {
+    return NextResponse.json({ error: 'Job ID is required' }, { status: 400 });
+  }
+
+  await connectDB();
+
+  try {
+    const body = await req.json();
+    const updatedJob = await JobListing.findByIdAndUpdate(jobId, body, { new: true });
+    
+    if (!updatedJob) {
+      return NextResponse.json({ error: 'Job not found' }, { status: 404 });
+    }
+
+    return NextResponse.json({ message: 'Job updated successfully', job: updatedJob }, { status: 200 });
+  } catch (error: any) {
+    console.error('Error updating job:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
+
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const session = await getServerSession(authOptions);
+  if (!session?.user || (session.user as any).role !== 'admin') {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const resolvedParams = await params;
+  const jobId = resolvedParams.id;
+  
+  if (!jobId) {
+    return NextResponse.json({ error: 'Job ID is required' }, { status: 400 });
+  }
+
+  await connectDB();
+
+  try {
+    const deletedJob = await JobListing.findByIdAndDelete(jobId);
+    
+    if (!deletedJob) {
+      return NextResponse.json({ error: 'Job not found' }, { status: 404 });
+    }
+
+    return NextResponse.json({ message: 'Job and company listing deleted successfully' }, { status: 200 });
+  } catch (error: any) {
+    console.error('Error deleting job:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}

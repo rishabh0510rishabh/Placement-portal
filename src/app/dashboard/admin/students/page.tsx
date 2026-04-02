@@ -105,6 +105,7 @@ export default function StudentManagementPage() {
             className={styles.filterSelect}
             value={branch}
             onChange={(e) => setBranch(e.target.value)}
+            title="Filter by Branch"
           >
             <option value="">All Branches</option>
             <option value="CSE">Computer Science (CSE)</option>
