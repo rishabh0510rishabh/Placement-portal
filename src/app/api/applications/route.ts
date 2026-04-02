@@ -62,3 +62,31 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
   }
 }
+
+// GET /api/applications
+export async function GET(req: NextRequest) {
+  const session = await getServerSession(authOptions);
+  
+  if (!session?.user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const userId = (session.user as any).id;
+
+  try {
+    await connectDB();
+
+    const applications = await JobApplication.find({ userId })
+      .populate({
+        path: 'jobId',
+        select: 'companyName role ctc location status',
+      })
+      .sort({ createdAt: -1 })
+      .lean();
+
+    return NextResponse.json({ applications }, { status: 200 });
+  } catch (error: any) {
+    console.error('Fetch applications error:', error);
+    return NextResponse.json({ error: 'Failed to fetch applications' }, { status: 500 });
+  }
+}
