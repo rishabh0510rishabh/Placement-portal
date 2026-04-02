@@ -4,6 +4,7 @@ import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import connectDB from '@/lib/mongodb';
 import User from '@/models/User';
 import StudentProfile from '@/models/StudentProfile';
+import mongoose from 'mongoose';
 
 export const dynamic = 'force-dynamic';
 
@@ -20,10 +21,18 @@ export async function GET(req: NextRequest) {
     const search = searchParams.get('search') || '';
     const branch = searchParams.get('branch') || '';
     const minCgpa = parseFloat(searchParams.get('minCgpa') || '0');
+    const id = searchParams.get('id');
 
     // Mongoose aggregation to join User and StudentProfile
     const pipeline: any[] = [
       { $match: { role: 'student' } },
+    ];
+
+    if (id) {
+      pipeline.push({ $match: { _id: new mongoose.Types.ObjectId(id) } });
+    }
+
+    pipeline.push(
       {
         $lookup: {
           from: 'studentprofiles',
@@ -38,7 +47,7 @@ export async function GET(req: NextRequest) {
           preserveNullAndEmptyArrays: true
         }
       }
-    ];
+    );
 
     // Search by name or email
     if (search) {

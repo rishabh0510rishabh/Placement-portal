@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import styles from './jobs.module.css';
 import profileStyles from '../profile/profile.module.css';
@@ -21,12 +22,16 @@ interface Job {
 }
 
 export default function JobsPage() {
+  const { data: session } = useSession();
   const [jobs, setJobs] = useState<Job[]>([]);
+  const [filteredJobs, setFilteredJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // We should ideally fetch the user's role to conditionally show "Create Job" button.
-  // For now, we'll assume standard layout display. Admin validation happens in API.
+  // Filters
+  const [search, setSearch] = useState('');
+  const [location, setLocation] = useState('');
+  const [branch, setBranch] = useState('');
 
   useEffect(() => {
     async function fetchJobs() {
@@ -36,6 +41,7 @@ export default function JobsPage() {
         
         if (res.ok) {
           setJobs(data.jobs || []);
+          setFilteredJobs(data.jobs || []);
         } else {
           setError(data.error || 'Failed to fetch jobs.');
         }
@@ -48,6 +54,28 @@ export default function JobsPage() {
     fetchJobs();
   }, []);
 
+  useEffect(() => {
+    let result = jobs;
+
+    if (search) {
+      result = result.filter(j => 
+        j.companyName.toLowerCase().includes(search.toLowerCase()) || 
+        j.role.toLowerCase().includes(search.toLowerCase()) ||
+        j.description.toLowerCase().includes(search.toLowerCase())
+      );
+    }
+
+    if (location) {
+      result = result.filter(j => j.location.toLowerCase().includes(location.toLowerCase()));
+    }
+
+    if (branch) {
+      result = result.filter(j => j.allowedBranches.includes(branch));
+    }
+
+    setFilteredJobs(result);
+  }, [search, location, branch, jobs]);
+
   if (loading) {
     return (
       <div className={profileStyles.loadingWrapper}>
@@ -55,6 +83,8 @@ export default function JobsPage() {
       </div>
     );
   }
+
+  const userRole = (session?.user as any)?.role || 'student';
 
   return (
     <div className={profileStyles.container}>
@@ -66,16 +96,50 @@ export default function JobsPage() {
           </p>
         </div>
         
-        {/* Placeholder: Only Admins should logically go here, but this is a CTA placeholder for testing */}
-        <Link href="/dashboard/admin/jobs/new" className="btn btn-outline" style={{ height: 'max-content' }}>
-          + Add New Job (Admin)
-        </Link>
+        {userRole === 'admin' && (
+          <Link href="/dashboard/admin/jobs/new" className="btn btn-outline" style={{ height: 'max-content' }}>
+            + Add New Job
+          </Link>
+        )}
+      </div>
+
+      <div className={styles.filterSection}>
+        <div className={styles.filterGroup}>
+          <input 
+            type="text" 
+            placeholder="Search role/company..." 
+            className={styles.filterInput}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          <input 
+            type="text" 
+            placeholder="Location..." 
+            className={styles.filterInput}
+            value={location}
+            onChange={(e) => setLocation(e.target.value)}
+          />
+          <select 
+            className={styles.filterInput} 
+            value={branch} 
+            onChange={(e) => setBranch(e.target.value)}
+            title="Filter by Branch Eligibility"
+          >
+            <option value="">All Branches</option>
+            <option value="CSE">CSE</option>
+            <option value="IT">IT</option>
+            <option value="ECE">ECE</option>
+            <option value="ME">ME</option>
+            <option value="EN">EN</option>
+            <option value="CIVIL">CIVIL</option>
+          </select>
+        </div>
       </div>
 
       {error && <div className="alert alert-error">{error}</div>}
 
       <div className={styles.jobList}>
-        {jobs.length === 0 && !error ? (
+        {filteredJobs.length === 0 && !error ? (
           <div className={styles.emptyState}>
             <p>No active job listings found right now. Check back later!</p>
           </div>
