@@ -116,6 +116,80 @@ export default function AdminDashboardPage() {
         </div>
       )}
 
+      {metrics && (
+        <div className={styles.chartsRow}>
+          {/* Trends Chart */}
+          <div className={styles.chartCard}>
+            <h2 className={styles.sectionTitle}>Placement Status Portfolio</h2>
+            <div className={styles.barChartContainer}>
+              <div className={styles.barGroup}>
+                <div className={styles.barLabel}>Placed ({Math.round((metrics.shortlistedStudents / metrics.totalStudents) * 100) || 0}%)</div>
+                <div className={styles.barTrack}>
+                  <div 
+                    className={`${styles.barFill} ${styles.bgSuccess}`} 
+                    style={{ width: `${(metrics.shortlistedStudents / metrics.totalStudents) * 100 || 0}%` }}
+                  ></div>
+                </div>
+              </div>
+              <div className={styles.barGroup}>
+                <div className={styles.barLabel}>In Process / Unplaced ({100 - (Math.round((metrics.shortlistedStudents / metrics.totalStudents) * 100) || 0)}%)</div>
+                <div className={styles.barTrack}>
+                  <div 
+                    className={`${styles.barFill} ${styles.bgWarning}`} 
+                    style={{ width: `${100 - (metrics.shortlistedStudents / metrics.totalStudents) * 100 || 0}%` }}
+                  ></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Activity Overiview */}
+          <div className={styles.chartCard}>
+            <h2 className={styles.sectionTitle}>Activity Overview</h2>
+            <p className={styles.subtitle}>Current engagement levels across the platform.</p>
+            <div className={styles.statsOverview}>
+              <div className={styles.statItem}>
+                <p className={styles.statValue}>{metrics.totalApplications}</p>
+                <p className={styles.statLabelSmall}>APPLICATIONS</p>
+              </div>
+              <div className={styles.statItem}>
+                <p className={styles.statValue}>{metrics.totalCompanies}</p>
+                <p className={styles.statLabelSmall}>COMPANIES</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* New Section: Top Performers (Mock data for display) */}
+      <div className={styles.extraSection}>
+        <h2 className={styles.sectionTitle}>Talent Spotlights</h2>
+        <p className={`${styles.subtitle} ${styles.marginBtm}`}>Top performant students currently seeking placement.</p>
+        <div className={styles.talentGrid}>
+          <div className={styles.talentCard}>
+            <div className={styles.talentInitial}>JD</div>
+            <div>
+              <p className={styles.talentName}>John Doe</p>
+              <p className={styles.talentInfo}>CSE | 9.8 CGPA</p>
+            </div>
+          </div>
+          <div className={styles.talentCard}>
+            <div className={styles.talentInitial}>AS</div>
+            <div>
+              <p className={styles.talentName}>Alice Smith</p>
+              <p className={styles.talentInfo}>IT | 9.7 CGPA</p>
+            </div>
+          </div>
+          <div className={styles.talentCard}>
+            <div className={styles.talentInitial}>RK</div>
+            <div>
+              <p className={styles.talentName}>Rahul Kumar</p>
+              <p className={styles.talentInfo}>ECE | 9.6 CGPA</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div className={styles.quickActions}>
         <h2 className={styles.sectionTitle}>Quick Actions</h2>
         <div className={styles.actionsGrid}>
@@ -142,6 +216,12 @@ export default function AdminDashboardPage() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
             </svg>
             Review Applications
+          </Link>
+          <Link href="/dashboard/admin/reports" className={styles.actionButton}>
+            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 17v-2a4 4 0 014-4h4m-4 4l2-2m-2 2l-2-2m2 2v4a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2"></path>
+            </svg>
+            Generate Reports
           </Link>
         </div>
       </div>

@@ -117,3 +117,148 @@
   align-items: center;
   min-height: 400px;
 }
+
+.chartsRow {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+@media (max-width: 600px) {
+  .chartsRow {
+    grid-template-columns: 1fr;
+  }
+}
+
+.chartCard {
+  background: var(--bg-card, #ffffff);
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.barChartContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  margin-top: 1rem;
+}
+
+.barGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.barLabel {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.barTrack {
+  height: 12px;
+  background: var(--bg-body, #f3f4f6);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.barFill {
+  height: 100%;
+  border-radius: 6px;
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.statsOverview {
+  display: flex;
+  justify-content: space-around;
+  text-align: center;
+  margin-top: 1rem;
+}
+
+.statItem {
+  display: flex;
+  flex-direction: column;
+}
+
+.statValue {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--primary-color);
+}
+
+.statLabelSmall {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+.bgSuccess {
+  background: #10b981;
+}
+
+.bgWarning {
+  background: #f59e0b;
+}
+
+.extraSection {
+  margin-top: 2rem;
+  background: rgba(255, 255, 255, 0.02);
+  padding: 24px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  margin-bottom: 2rem;
+}
+
+.talentGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+}
+
+.talentCard {
+  background: var(--bg-card);
+  padding: 1rem;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  transition: transform 0.2s;
+}
+
+.talentCard:hover {
+  transform: scale(1.02);
+}
+
+.talentInitial {
+  width: 40px;
+  height: 40px;
+  background: var(--primary-color);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.talentName {
+  margin: 0;
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.talentInfo {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.marginBtm {
+  margin-bottom: 1.5rem;
+}
