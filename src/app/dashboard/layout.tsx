@@ -4,6 +4,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useEffect } from 'react';
 import Link from 'next/link';
+import NotificationBell from '@/components/NotificationBell';
 import styles from './dashboard.module.css';
 
 export default function DashboardLayout({
@@ -102,6 +103,7 @@ export default function DashboardLayout({
             </h2>
           </div>
           <div className={styles.headerRight}>
+            <NotificationBell />
             <div className={styles.profileProgress}>
               <div className={styles.progressLabel}>
                 <span>Profile Completion</span>

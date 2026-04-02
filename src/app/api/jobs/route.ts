@@ -54,9 +54,30 @@ export async function POST(req: NextRequest) {
 
     const newJob = await JobListing.create(body);
 
+    // Create notifications for all students
+    try {
+      const students = await User.find({ role: 'student' }, '_id');
+      const notifications = students.map((student) => ({
+        userId: student._id,
+        title: 'New Job Posting!',
+        message: `${newJob.companyName} is hiring for ${newJob.role}! Check eligibility and apply now.`,
+        type: 'job_alert',
+        relatedId: (newJob as any)._id,
+      }));
+
+      if (notifications.length > 0) {
+        await Notification.insertMany(notifications);
+      }
+    } catch (notifError) {
+      console.error('Failed to create broadcast notifications for new job:', notifError);
+    }
+
     return NextResponse.json({ message: 'Job listing created successfully', job: newJob }, { status: 201 });
   } catch (error: any) {
     console.error('Job creation error:', error);
     return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
   }
 }
+
+import User from '@/models/User';
+import Notification from '@/models/Notification';
