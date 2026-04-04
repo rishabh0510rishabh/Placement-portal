@@ -1,44 +1,52 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
-import connectDB from '@/lib/mongodb';
-import User from '@/models/User';
-import JobListing from '@/models/JobListing';
-import JobApplication from '@/models/JobApplication';
+import { supabase } from '@/lib/supabase';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions);
-
+  
   if (!session?.user || (session.user as any).role !== 'admin') {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   try {
-    await connectDB();
+    // 1. Get total students count via HTTPS
+    const { count: totalStudents } = await supabase
+      .from('User')
+      .select('*', { count: 'exact', head: true })
+      .eq('role', 'student');
 
-    const [totalStudents, totalApplications, shortlistedStudents, jobListings] = await Promise.all([
-      User.countDocuments({ role: 'student' }),
-      JobApplication.countDocuments(),
-      JobApplication.countDocuments({ status: { $in: ['shortlisted', 'hired', 'interviewing'] } }),
-      JobListing.find({}, 'companyName').lean()
-    ]);
+    // 2. Get total applications count via HTTPS
+    const { count: totalApplications } = await supabase
+      .from('JobApplication')
+      .select('*', { count: 'exact', head: true });
 
-    // Calculate unique companies
-    const uniqueCompanies = new Set(jobListings.map(job => job.companyName));
-    const totalCompanies = uniqueCompanies.size;
+    // 3. Get shortlisted/interviewing students count via HTTPS
+    const { count: shortlistedStudents } = await supabase
+      .from('JobApplication')
+      .select('*', { count: 'exact', head: true })
+      .in('status', ['shortlisted', 'hired', 'interviewing']);
+
+    // 4. Get total unique companies via HTTPS
+    const { data: companies } = await supabase
+      .from('Company')
+      .select('id')
+      .eq('status', 'active');
 
     return NextResponse.json({
       metrics: {
-        totalStudents,
-        totalCompanies,
-        totalApplications,
-        shortlistedStudents
+        totalStudents: totalStudents || 0,
+        totalCompanies: companies?.length || 0,
+        totalApplications: totalApplications || 0,
+        shortlistedStudents: shortlistedStudents || 0
       }
     }, { status: 200 });
+
   } catch (error: any) {
-    console.error('Fetch admin metrics error:', error);
-    return NextResponse.json({ error: 'Failed to fetch metrics' }, { status: 500 });
+    console.error('Fetch admin metrics error:', error.message);
+    return NextResponse.json({ error: 'Failed to fetch cloud metrics over HTTPS' }, { status: 500 });
   }
 }
