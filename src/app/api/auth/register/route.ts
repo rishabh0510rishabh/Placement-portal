@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { supabase } from '@/lib/supabase';
 import bcrypt from 'bcryptjs';
 
 export const dynamic = 'force-dynamic';
@@ -8,7 +8,7 @@ export async function POST(req: NextRequest) {
   try {
     const { name, email, password } = await req.json();
 
-    // Validate required fields
+    // 1. Validate required fields
     if (!name || !email || !password) {
       return NextResponse.json(
         { error: 'Name, email, and password are required.' },
@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Enforce RKGIT email domain for students
+    // 2. Enforce RKGIT email domain for students
     const lowerEmail = email.toLowerCase();
     if (!lowerEmail.endsWith('@rkgit.edu.in')) {
       return NextResponse.json(
@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Validate password length
+    // 3. Validate password length
     if (password.length < 8) {
       return NextResponse.json(
         { error: 'Password must be at least 8 characters long.' },
@@ -33,10 +33,12 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Check if user already exists
-    const existingUser = await prisma.user.findUnique({
-      where: { email: lowerEmail },
-    });
+    // 4. Check if user already exists via HTTPS (Guaranteed connection)
+    const { data: existingUser } = await supabase
+      .from('User')
+      .select('id')
+      .eq('email', lowerEmail)
+      .single();
 
     if (existingUser) {
       return NextResponse.json(
@@ -45,22 +47,26 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Hash password for Postgres storage
+    // 5. Hash password for Postgres storage
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    // Create new student user
-    const user = await prisma.user.create({
-      data: {
+    // 6. Create new student user via HTTPS SDK
+    const { data: user, error: insertError } = await supabase
+      .from('User')
+      .insert({
         name,
         email: lowerEmail,
         password: hashedPassword,
         role: 'student',
-      },
-    });
+      })
+      .select()
+      .single();
+
+    if (insertError) throw insertError;
 
     return NextResponse.json(
       {
-        message: 'Account created successfully.',
+        message: 'Account created successfully over HTTPS.',
         user: {
           id: user.id,
           name: user.name,
@@ -70,10 +76,10 @@ export async function POST(req: NextRequest) {
       },
       { status: 201 }
     );
-  } catch (error: unknown) {
-    console.error('Registration error:', error);
+  } catch (error: any) {
+    console.error('Registration error:', error.message);
     return NextResponse.json(
-      { error: 'Internal server error. Please try again.' },
+      { error: 'Internal server error over HTTPS. Please try again.' },
       { status: 500 }
     );
   }

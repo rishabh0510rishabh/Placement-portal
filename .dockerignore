@@ -1,0 +1,25 @@
+# --- NODE & NEXT (IGNORE THESE) ---
+node_modules
+.next
+out
+build
+
+# --- LOGS ---
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# --- SECRETS & DOTFILES ---
+.env*
+.env.local
+.git
+.gitignore
+.dockerignore
+LICENSE
+README.md
+
+# --- OS FILES ---
+.DS_Store
+Thumbs.db
