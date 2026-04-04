@@ -1,7 +1,9 @@
 import mongoose, { Schema, Document, Model } from 'mongoose';
 
 export interface IJobListing extends Document {
+  companyId: mongoose.Types.ObjectId;
   companyName: string;
+  category: 'Full-time' | 'Internship' | 'Trainee';
   role: string;
   description: string;
   minimumCgpa: number;
@@ -9,7 +11,7 @@ export interface IJobListing extends Document {
   requiredSkills: string[];
   maximumBacklogs: number;
   salaryCtc: string;
-  ctcBreakdown: string;
+  ctcBreakdown?: string;
   location: string;
   deadline: Date;
   status: 'active' | 'closed';
@@ -19,7 +21,9 @@ export interface IJobListing extends Document {
 
 const JobListingSchema: Schema<IJobListing> = new Schema(
   {
+    companyId: { type: Schema.Types.ObjectId, ref: 'Company' },
     companyName: { type: String, required: true, trim: true },
+    category: { type: String, enum: ['Full-time', 'Internship', 'Trainee'], default: 'Full-time' },
     role: { type: String, required: true, trim: true },
     description: { type: String, required: true },
     minimumCgpa: { type: Number, required: true, min: 0, max: 10 },

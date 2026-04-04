@@ -1,279 +1,103 @@
-'use client';
+"use client"
 
-import { useState } from 'react';
-import { signIn } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
-import styles from './page.module.css';
-import Modal from '@/components/Modal/Modal';
+import Image from "next/image"
+import Link from "next/link"
+import { Button } from "@/components/ui/button"
+import { ArrowRight, LogIn, UserPlus } from "lucide-react"
 
-export default function Home() {
-  const router = useRouter();
-  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-  const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
-
-  // Login States
-  const [loginEmail, setLoginEmail] = useState('');
-  const [loginPassword, setLoginPassword] = useState('');
-  const [loginError, setLoginError] = useState('');
-  const [loginLoading, setLoginLoading] = useState(false);
-
-  // Register States
-  const [regForm, setRegForm] = useState({ name: '', email: '', password: '', confirmPassword: '' });
-  const [regError, setRegError] = useState('');
-  const [regSuccess, setRegSuccess] = useState('');
-  const [regLoading, setRegLoading] = useState(false);
-
-  const handleLoginSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoginError('');
-    setLoginLoading(true);
-
-    try {
-      const result = await signIn('credentials', {
-        email: loginEmail,
-        password: loginPassword,
-        redirect: false,
-      });
-
-      if (result?.error) {
-        setLoginError(result.error);
-      } else {
-        router.push('/dashboard');
-        router.refresh();
-      }
-    } catch {
-      setLoginError('An unexpected error occurred. Please try again.');
-    } finally {
-      setLoginLoading(false);
-    }
-  };
-
-  const handleRegisterSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setRegError('');
-    setRegSuccess('');
-
-    if (!regForm.name || !regForm.email || !regForm.password || !regForm.confirmPassword) {
-      setRegError('All fields are required.');
-      return;
-    }
-
-    if (!regForm.email.endsWith('@rkgit.edu.in')) {
-      setRegError('Only @rkgit.edu.in email addresses are allowed.');
-      return;
-    }
-
-    if (regForm.password.length < 8) {
-      setRegError('Password must be at least 8 characters long.');
-      return;
-    }
-
-    if (regForm.password !== regForm.confirmPassword) {
-      setRegError('Passwords do not match.');
-      return;
-    }
-
-    setRegLoading(true);
-
-    try {
-      const res = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: regForm.name, email: regForm.email, password: regForm.password }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        setRegError(data.error || 'Registration failed. Please try again.');
-      } else {
-        setRegSuccess('Account created! Sign in to continue.');
-        setTimeout(() => {
-          setIsRegisterModalOpen(false);
-          setIsLoginModalOpen(true);
-        }, 1500);
-      }
-    } catch {
-      setRegError('An unexpected error occurred. Please try again.');
-    } finally {
-      setRegLoading(false);
-    }
-  };
-
+export default function LandingPage() {
   return (
-    <div className="container" id="root-portal-view">
-      <section className={styles.heroSection}>
-        <div className={styles.glassGlow}></div>
-        <div className={styles.heroContent}>
-          <h1 className={styles.heroTitle}>Elevating Careers at RKGIT</h1>
-          <p className={styles.heroSubtitle}>
-            A centralized recruitment ecosystem enabling the next generation of engineers 
-            to connect with global opportunities through data-driven tracking.
+    <div className="relative min-h-screen flex flex-col items-center justify-center bg-[#0a0a0a] overflow-hidden">
+      {/* Dynamic Background Effects */}
+      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-500/10 blur-[120px] rounded-full animate-pulse" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-emerald-500/10 blur-[120px] rounded-full animate-pulse " style={{ animationDelay: '2s' }} />
+      </div>
+
+      {/* Background Image with Overlay */}
+      <div 
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-[0.08]"
+        style={{
+          backgroundImage: "url('https://rkgit.edu.in/assets/images/slider/slide%201.jpeg')"
+        }}
+      >
+        <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/60 to-[#0a0a0a]" />
+      </div>
+
+      {/* Content */}
+      <div className="relative z-10 flex flex-col items-center gap-10 text-center px-6 w-full max-w-5xl mx-auto">
+        {/* College Logo */}
+        <div className="relative group">
+          <div className="absolute -inset-1 bg-white/20 rounded-full blur opacity-20 group-hover:opacity-40 transition-opacity duration-500" />
+          <div className="relative bg-black/40 backdrop-blur-md p-6 rounded-full border border-white/10 shadow-2xl">
+            <Image
+              src="https://erp.rkgit.edu.in/assets/img/logo-nbg.png"
+              alt="RKGIT Logo"
+              width={160}
+              height={80}
+              className="w-32 h-auto"
+              priority
+            />
+          </div>
+        </div>
+
+        <div className="max-w-3xl">
+          <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight text-white mb-6 leading-tight">
+            RKGIT <span className="text-[#22c55e]">Placements</span> Portal
+          </h1>
+          <p className="text-lg md:text-xl text-gray-400 mb-10 max-w-2xl mx-auto font-light leading-relaxed">
+            A premium placement ecosystem connecting the brightest minds 
+            at RKGIT with industry leaders through streamlined, data-driven recruitment.
           </p>
-          <div className={styles.heroActions}>
-            <button 
-              onClick={() => setIsLoginModalOpen(true)} 
-              className="btn btn-primary"
-            >
+        </div>
+
+        {/* Action Buttons with Fixed Alignment */}
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-5 w-full sm:w-auto min-w-[280px]">
+          <Button 
+            asChild 
+            className="w-full sm:w-48 h-14 text-base bg-[#22c55e] hover:bg-[#16a34a] text-black font-bold rounded-xl transition-all duration-300 shadow-[0_0_20px_rgba(34,197,94,0.15)] hover:shadow-[0_0_30px_rgba(34,197,94,0.3)] hover:-translate-y-0.5"
+          >
+            <Link href="/auth/signin" className="flex items-center justify-center gap-2">
+              <LogIn className="w-5 h-5" />
               Sign In
-              <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
-              </svg>
-            </button>
-            <button 
-              onClick={() => setIsRegisterModalOpen(true)} 
-              className="btn btn-ghost"
-            >
-              Create Account
-            </button>
+            </Link>
+          </Button>
+          
+          <Button 
+            asChild 
+            variant="outline" 
+            className="w-full sm:w-48 h-14 text-base border-white/10 bg-white/5 backdrop-blur-sm hover:bg-white/10 text-white font-bold rounded-xl transition-all duration-300 hover:-translate-y-0.5"
+          >
+            <Link href="/auth/signup" className="flex items-center justify-center gap-2">
+              <UserPlus className="w-5 h-5" />
+              Join Portal
+            </Link>
+          </Button>
+        </div>
+
+        {/* Trust Indicators */}
+        <div className="pt-10 flex flex-wrap justify-center gap-x-12 gap-y-6 opacity-40 grayscale hover:grayscale-0 transition-all duration-500">
+          <div className="flex flex-col items-center">
+            <span className="text-2xl font-bold text-white">45+</span>
+            <span className="text-xs text-gray-400 font-medium tracking-widest uppercase">Companies</span>
+          </div>
+          <div className="flex flex-col items-center border-x border-white/10 px-12">
+            <span className="text-2xl font-bold text-white">500+</span>
+            <span className="text-xs text-gray-400 font-medium tracking-widest uppercase">Offers</span>
+          </div>
+          <div className="flex flex-col items-center">
+            <span className="text-2xl font-bold text-white">12 LPA</span>
+            <span className="text-xs text-gray-400 font-medium tracking-widest uppercase">Avg Package</span>
           </div>
         </div>
-      </section>
+      </div>
 
-      <section className={styles.featuresSection}>
-        <div className={styles.featuresGrid}>
-          <div className={styles.featureCard}>
-            <div className={styles.featureIcon}>
-              <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-              </svg>
-            </div>
-            <h3 className={styles.featureTitle}>Placement Analytics</h3>
-            <p className={styles.featureText}>
-              Comprehensive data visualization for institutional hiring velocity and salary trends.
-            </p>
-          </div>
-
-          <div className={styles.featureCard}>
-            <div className={styles.featureIcon}>
-              <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-              </svg>
-            </div>
-            <h3 className={styles.featureTitle}>Student Success Tracking</h3>
-            <p className={styles.featureText}>
-              Profile-first management engine supporting academic milestones and professional readiness.
-            </p>
-          </div>
-
-          <div className={styles.featureCard}>
-            <div className={styles.featureIcon}>
-              <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-1.025m4.438 0a3.42 3.42 0 001.946 1.025m3.42 3.42c1.946 0 3.42 1.474 3.42 3.42m-13.68 0c0-1.946 1.474-3.42 3.42-3.42m3.42 3.42V7m6 7v6a2 2 0 01-2 2H7a2 2 0 01-2-2v-6m6-6a3.42 3.42 0 010 6.84m6-6.84a3.42 3.42 0 010 6.84" />
-              </svg>
-            </div>
-            <h3 className={styles.featureTitle}>Smart Eligibility</h3>
-            <p className={styles.featureText}>
-              Automated screening mapping candidate CGPA, branch, and skillsets to company listings.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* LOGIN MODAL */}
-      <Modal 
-        isOpen={isLoginModalOpen} 
-        onClose={() => setIsLoginModalOpen(false)} 
-        title="Welcome Back"
-      >
-        <form onSubmit={handleLoginSubmit} className={styles.modalForm}>
-          {loginError && <div className="alert alert-error">{loginError}</div>}
-          <div className="form-group">
-            <label className="form-label">College Email</label>
-            <input 
-              className="form-input" 
-              type="email" 
-              value={loginEmail} 
-              onChange={(e) => setLoginEmail(e.target.value)}
-              placeholder="you@rkgit.edu.in"
-              required 
-            />
-          </div>
-          <div className="form-group">
-            <label className="form-label">Password</label>
-            <input 
-              className="form-input" 
-              type="password" 
-              value={loginPassword} 
-              onChange={(e) => setLoginPassword(e.target.value)}
-              placeholder="Enter password"
-              required 
-            />
-          </div>
-          <button type="submit" className={`btn btn-primary ${styles.modalFullWidth}`} disabled={loginLoading}>
-            {loginLoading ? <span className="spinner" /> : 'Sign In'}
-          </button>
-          <p className={styles.modalFooterText}>
-            Don&apos;t have an account?
-            <button 
-              type="button" 
-              onClick={() => { setIsLoginModalOpen(false); setIsRegisterModalOpen(true); }}
-              className={styles.textLink}
-            >
-              Sign up
-            </button>
-          </p>
-        </form>
-      </Modal>
-
-      {/* REGISTER MODAL */}
-      <Modal 
-        isOpen={isRegisterModalOpen} 
-        onClose={() => setIsRegisterModalOpen(false)} 
-        title="Create Account"
-      >
-        <form onSubmit={handleRegisterSubmit} className={styles.modalForm}>
-          {regError && <div className="alert alert-error">{regError}</div>}
-          {regSuccess && <div className="alert alert-success">{regSuccess}</div>}
-          <div className="form-group">
-            <label className="form-label">Full Name</label>
-            <input 
-              className="form-input" 
-              type="text" 
-              value={regForm.name}
-              onChange={(e) => setRegForm({...regForm, name: e.target.value})}
-              placeholder="John Doe"
-              required 
-            />
-          </div>
-          <div className="form-group">
-            <label className="form-label">Student Email</label>
-            <input 
-              className="form-input" 
-              type="email" 
-              value={regForm.email}
-              onChange={(e) => setRegForm({...regForm, email: e.target.value})}
-              placeholder="you@rkgit.edu.in"
-              required 
-            />
-          </div>
-          <div className="form-group">
-            <label className="form-label">Password</label>
-            <input 
-              className="form-input" 
-              type="password" 
-              value={regForm.password}
-              onChange={(e) => setRegForm({...regForm, password: e.target.value})}
-              placeholder="Min 8 characters"
-              required 
-            />
-          </div>
-          <div className="form-group">
-            <label className="form-label">Confirm Password</label>
-            <input 
-              className="form-input" 
-              type="password" 
-              value={regForm.confirmPassword}
-              onChange={(e) => setRegForm({...regForm, confirmPassword: e.target.value})}
-              placeholder="Repeat password"
-              required 
-            />
-          </div>
-          <button type="submit" className={`btn btn-primary ${styles.modalFullWidth}`} disabled={regLoading}>
-            {regLoading ? <span className="spinner" /> : 'Create Account'}
-          </button>
-        </form>
-      </Modal>
+      {/* Footer Branding */}
+      <div className="absolute bottom-8 left-0 w-full text-center px-4">
+        <p className="text-[10px] text-gray-600 font-semibold tracking-[0.3em] uppercase">
+          Raj Kumar Goel Institute of Technology · Ghaziabad
+        </p>
+      </div>
     </div>
-  );
+  )
 }

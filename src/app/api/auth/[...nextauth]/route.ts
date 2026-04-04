@@ -16,9 +16,21 @@ export const authOptions: AuthOptions = {
           throw new Error('Email and password are required.');
         }
 
+        // --- HARDCODED DEMO BYPASS ---
+        const lowerEmail = credentials.email.toLowerCase();
+        if (credentials.password === 'password123') {
+          if (lowerEmail === 'admin@rkgit.edu.in') {
+            return { id: 'demo-admin-id', name: 'Demo Administrator', email: lowerEmail, role: 'admin' };
+          }
+          if (lowerEmail === 'student@rkgit.edu.in') {
+            return { id: 'demo-student-id', name: 'Demo Student', email: lowerEmail, role: 'student' };
+          }
+        }
+        // -----------------------------
+
         await connectDB();
 
-        const user = await User.findOne({ email: credentials.email.toLowerCase() });
+        const user = await User.findOne({ email: lowerEmail });
 
         if (!user) {
           throw new Error('No account found with this email address.');
@@ -55,8 +67,8 @@ export const authOptions: AuthOptions = {
     },
   },
   pages: {
-    signIn: '/login',
-    error: '/login',
+    signIn: '/auth/signin',
+    error: '/auth/signin',
   },
   session: {
     strategy: 'jwt',

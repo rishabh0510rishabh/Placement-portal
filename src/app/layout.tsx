@@ -1,30 +1,59 @@
-import type { Metadata } from "next";
-import { Inter } from "next/font/google";
-import "./globals.css";
-import SessionProvider from "@/components/SessionProvider";
+import type { Metadata } from 'next';
+import { Geist, Geist_Mono } from 'next/font/google';
+import { Analytics } from '@vercel/analytics/next';
+import { ThemeProvider } from '@/components/theme-provider';
+import { Toaster } from '@/components/ui/sonner';
+import SessionProvider from '@/components/SessionProvider';
+import '@/styles/globals.css';
 
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
-});
+const _geist = Geist({ subsets: ["latin"] });
+const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "RKGIT Placement Portal",
-  description: "Centralized placement platform for RKGIT students. Find companies, track applications, and manage your placement journey.",
-};
+  title: 'RKGIT Placement Portal',
+  description: 'Campus Placement Management System for RKGIT',
+  generator: 'v0.app',
+  icons: {
+    icon: [
+      {
+        url: '/icon-light-32x32.png',
+        media: '(prefers-color-scheme: light)',
+      },
+      {
+        url: '/icon-dark-32x32.png',
+        media: '(prefers-color-scheme: dark)',
+      },
+      {
+        url: '/icon.svg',
+        type: 'image/svg+xml',
+      },
+    ],
+    apple: '/apple-icon.png',
+  },
+}
 
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode;
+  children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className={inter.variable}>
-      <body>
+    <html lang="en" suppressHydrationWarning>
+      <body className="font-sans antialiased">
         <SessionProvider>
-          {children}
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="dark"
+            forcedTheme="dark"
+            enableSystem
+            disableTransitionOnChange
+          >
+            {children}
+            <Toaster position="top-right" closeButton richColors />
+            {process.env.NODE_ENV === 'production' && <Analytics />}
+          </ThemeProvider>
         </SessionProvider>
       </body>
     </html>
-  );
+  )
 }
