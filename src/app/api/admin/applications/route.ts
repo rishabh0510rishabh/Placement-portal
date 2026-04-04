@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
-import connectDB from '@/lib/mongodb';
-import JobApplication from '@/models/JobApplication';
+import { prisma } from '@/lib/prisma';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,14 +13,33 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    await connectDB();
-    const applications = await JobApplication.find({})
-      .populate('userId', 'name email')
-      .populate('jobId', 'companyName role')
-      .sort({ createdAt: -1 });
+    const applications = await prisma.jobApplication.findMany({
+      include: {
+        student: {
+          select: {
+            fullName: true,
+            email: true,
+          }
+        },
+        job: {
+          select: {
+            company: {
+              select: {
+                name: true
+              }
+            },
+            role: true
+          }
+        }
+      },
+      orderBy: {
+        createdAt: 'desc'
+      }
+    });
     
     return NextResponse.json({ applications }, { status: 200 });
   } catch (error) {
+    console.error('Fetch applications error:', error);
     return NextResponse.json({ error: 'Failed to fetch applications' }, { status: 500 });
   }
 }
@@ -35,10 +53,13 @@ export async function PATCH(req: NextRequest) {
 
   try {
     const { id, status } = await req.json();
-    await connectDB();
-    const application = await JobApplication.findByIdAndUpdate(id, { status }, { new: true });
+    const application = await prisma.jobApplication.update({
+      where: { id },
+      data: { status }
+    });
     return NextResponse.json({ application }, { status: 200 });
   } catch (error) {
+    console.error('Update application error:', error);
     return NextResponse.json({ error: 'Failed to update application' }, { status: 500 });
   }
 }

@@ -5,11 +5,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { GraduationCap, Save, Calculator } from "lucide-react"
+import { GraduationCap, Save, Calculator, Loader2 } from "lucide-react"
 
 const semesters = [1, 2, 3, 4, 5, 6, 7]
 
 export default function AcademicsPage() {
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
   const [gpas, setGpas] = useState<Record<number, string>>({
     1: "",
     2: "",
@@ -21,8 +23,29 @@ export default function AcademicsPage() {
   })
   const [cgpa, setCgpa] = useState<number | null>(null)
 
+  // Fetch data on load
   useEffect(() => {
-    // Calculate CGPA whenever GPAs change
+    async function fetchAcademics() {
+      try {
+        const res = await fetch('/api/profile');
+        const data = await res.json();
+        if (data.profile?.semesters) {
+          const loadedGpas = { ...gpas };
+          data.profile.semesters.forEach((sem: any) => {
+            loadedGpas[sem.semester] = sem.gpa.toString();
+          });
+          setGpas(loadedGpas);
+        }
+      } catch (err) {
+        console.error("Failed to load academics:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchAcademics();
+  }, []);
+
+  useEffect(() => {
     const validGpas = Object.values(gpas)
       .map((gpa) => parseFloat(gpa))
       .filter((gpa) => !isNaN(gpa) && gpa >= 0 && gpa <= 10)
@@ -36,28 +59,48 @@ export default function AcademicsPage() {
   }, [gpas])
 
   const handleGpaChange = (sem: number, value: string) => {
-    // Only allow valid GPA values (0-10)
     const numValue = parseFloat(value)
     if (value === "" || (!isNaN(numValue) && numValue >= 0 && numValue <= 10)) {
       setGpas({ ...gpas, [sem]: value })
     }
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    console.log("GPA data:", gpas, "CGPA:", cgpa)
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      const res = await fetch('/api/profile/academics', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ gpas, cgpa }),
+      });
+      if (res.ok) {
+        alert("Academics updated successfully!");
+      }
+    } catch (err) {
+      console.error("Save error:", err);
+      alert("Failed to save changes.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    )
   }
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div>
         <h1 className="text-2xl font-semibold text-foreground">Academic Details</h1>
         <p className="text-muted-foreground mt-1">Enter your semester-wise GPA</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* GPA Form */}
         <Card className="bg-card border-border lg:col-span-2">
           <CardHeader className="flex flex-row items-center gap-2">
             <GraduationCap className="h-5 w-5 text-primary" />
@@ -84,16 +127,15 @@ export default function AcademicsPage() {
               </div>
 
               <div className="flex justify-end">
-                <Button type="submit" className="gap-2">
-                  <Save className="h-4 w-4" />
-                  Save Academic Details
+                <Button type="submit" disabled={saving} className="gap-2">
+                  {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                  {saving ? "Saving..." : "Save Academic Details"}
                 </Button>
               </div>
             </form>
           </CardContent>
         </Card>
 
-        {/* CGPA Card */}
         <Card className="bg-card border-border h-fit">
           <CardHeader className="flex flex-row items-center gap-2">
             <Calculator className="h-5 w-5 text-primary" />

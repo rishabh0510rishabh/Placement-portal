@@ -1,45 +1,25 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { User, Save } from "lucide-react"
+import { User, Save, Loader2, CheckCircle2 } from "lucide-react"
 
 const courses = [
   {
     name: "B.Tech.",
     branches: [
-      "Computer Science and Engineering",
-      "Computer Science",
-      "Computer Science and Engineering (Artificial Intelligence and Machine Learning)",
-      "Computer Science and Engineering (Data Science)",
-      "Information Technology",
-      "Electronics and Communication Engineering",
-      "Electrical and Electronics Engineering",
-      "Mechanical Engineering",
-      "Civil Engineering",
-    ]
-  },
-  {
-    name: "M.Tech.",
-    branches: [
-      "Electronics and Communication Engineering",
-      "Computer Science and Engineering",
-    ]
-  },
-  {
-    name: "MBA",
-    branches: [
-      "Master of Business Administration",
-    ]
-  },
-  {
-    name: "MCA",
-    branches: [
-      "Master of Computer Application",
+      { id: "CSE", name: "Computer Science and Engineering" },
+      { id: "CSE_AI", name: "CSE (Artificial Intelligence)" },
+      { id: "CSE_DS", name: "CSE (Data Science)" },
+      { id: "IT", name: "Information Technology" },
+      { id: "ECE", name: "Electronics and Communication" },
+      { id: "EN", name: "Electrical Engineering" },
+      { id: "ME", name: "Mechanical Engineering" },
+      { id: "CE", name: "Civil Engineering" },
     ]
   },
 ]
@@ -48,54 +28,113 @@ const sections = ["A", "B", "C", "D", "E", "F", "G"]
 const semesters = ["1", "2", "3", "4", "5", "6", "7", "8"]
 
 export default function ProfilePage() {
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
   const [formData, setFormData] = useState({
     fullName: "",
     rollNumber: "",
     collegeId: "",
-    course: "",
+    course: "B.Tech.",
     branch: "",
     section: "",
-    phone: "",
+    phoneNumber: "",
     email: "",
-    semester: "",
+    currentSemester: "",
   })
 
-  const selectedCourse = courses.find(c => c.name === formData.course)
-  const availableBranches = selectedCourse?.branches || []
+  // Load profile from Supabase
+  useEffect(() => {
+    async function fetchProfile() {
+      try {
+        const res = await fetch('/api/profile');
+        const data = await res.json();
+        if (data.profile) {
+          setFormData({
+            fullName: data.profile.fullName || "",
+            rollNumber: data.profile.rollNumber || "",
+            collegeId: data.profile.collegeId || "",
+            course: "B.Tech.",
+            branch: data.profile.branch || "",
+            section: data.profile.section || "",
+            phoneNumber: data.profile.phoneNumber || "",
+            email: data.profile.email || "",
+            currentSemester: data.profile.currentSemester?.toString() || "",
+          });
+        }
+      } catch (err) {
+        console.error("Load profile error:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchProfile();
+  }, []);
 
-  const handleCourseChange = (value: string) => {
-    setFormData({ ...formData, course: value, branch: "" })
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      const res = await fetch('/api/profile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...formData,
+          currentSemester: parseInt(formData.currentSemester)
+        }),
+      });
+      if (res.ok) {
+        alert("Profile saved successfully!");
+      } else {
+        const err = await res.json();
+        alert(err.error || "Failed to save profile.");
+      }
+    } catch (err) {
+      console.error("Save error:", err);
+    } finally {
+      setSaving(false);
+    }
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    // Handle form submission
-    console.log("Profile data:", formData)
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    )
   }
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-semibold text-foreground">Profile</h1>
-        <p className="text-muted-foreground mt-1">Manage your personal information</p>
+      <div className="flex items-center justify-between">
+        <div className="space-y-1">
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">Student Profile</h1>
+          <p className="text-muted-foreground">Keep your primary academic and contact details updated.</p>
+        </div>
+        {formData.rollNumber && (
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-medium">
+            <CheckCircle2 className="h-4 w-4" />
+            Verified Profile
+          </div>
+        )}
       </div>
 
-      <Card className="bg-card border-border max-w-3xl">
-        <CardHeader className="flex flex-row items-center gap-2">
+      <Card className="bg-card/50 backdrop-blur-sm border-border shadow-xl">
+        <CardHeader className="flex flex-row items-center gap-2 border-b border-border/50 pb-4 mb-6">
           <User className="h-5 w-5 text-primary" />
-          <CardTitle className="text-lg">Basic Details</CardTitle>
+          <CardTitle className="text-lg">Core Information</CardTitle>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <form onSubmit={handleSubmit} className="space-y-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
               <div className="space-y-2">
                 <Label htmlFor="fullName">Full Name</Label>
                 <Input
                   id="fullName"
-                  placeholder="Enter your full name"
+                  placeholder="Rohan Sharma"
+                  className="bg-background/50"
                   value={formData.fullName}
                   onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                  required
                 />
               </div>
 
@@ -103,126 +142,106 @@ export default function ProfilePage() {
                 <Label htmlFor="rollNumber">Roll Number</Label>
                 <Input
                   id="rollNumber"
-                  placeholder="Enter your roll number"
+                  placeholder="2101330100..."
+                  className="bg-background/50"
                   value={formData.rollNumber}
                   onChange={(e) => setFormData({ ...formData, rollNumber: e.target.value })}
+                  required
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="collegeId">College ID</Label>
+                <Label htmlFor="collegeId">College Student ID</Label>
                 <Input
                   id="collegeId"
-                  placeholder="Enter your college ID"
+                  placeholder="RKGIT-2021-..."
+                  className="bg-background/50"
                   value={formData.collegeId}
                   onChange={(e) => setFormData({ ...formData, collegeId: e.target.value })}
+                  required
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="course">Course</Label>
-                <Select
-                  value={formData.course}
-                  onValueChange={handleCourseChange}
-                >
-                  <SelectTrigger id="course">
-                    <SelectValue placeholder="Select course" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {courses.map((course) => (
-                      <SelectItem key={course.name} value={course.name}>
-                        {course.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="branch">Branch</Label>
+                <Label htmlFor="branch">Branch / Department</Label>
                 <Select
                   value={formData.branch}
                   onValueChange={(value) => setFormData({ ...formData, branch: value })}
-                  disabled={!formData.course}
                 >
-                  <SelectTrigger id="branch">
-                    <SelectValue placeholder={formData.course ? "Select branch" : "Select course first"} />
+                  <SelectTrigger id="branch" className="bg-background/50">
+                    <SelectValue placeholder="Identify your major" />
                   </SelectTrigger>
                   <SelectContent>
-                    {availableBranches.map((branch) => (
-                      <SelectItem key={branch} value={branch}>
-                        {branch}
-                      </SelectItem>
+                    {courses[0].branches.map((b) => (
+                      <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="section">Section</Label>
+                <Label htmlFor="section">Class Section</Label>
                 <Select
                   value={formData.section}
                   onValueChange={(value) => setFormData({ ...formData, section: value })}
                 >
-                  <SelectTrigger id="section">
+                  <SelectTrigger id="section" className="bg-background/50">
                     <SelectValue placeholder="Select section" />
                   </SelectTrigger>
                   <SelectContent>
                     {sections.map((section) => (
-                      <SelectItem key={section} value={section}>
-                        {section}
-                      </SelectItem>
+                      <SelectItem key={section} value={section}>{section}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="semester">Current Semester</Label>
+                <Label htmlFor="semester">Current Academic Semester</Label>
                 <Select
-                  value={formData.semester}
-                  onValueChange={(value) => setFormData({ ...formData, semester: value })}
+                  value={formData.currentSemester}
+                  onValueChange={(value) => setFormData({ ...formData, currentSemester: value })}
                 >
-                  <SelectTrigger id="semester">
-                    <SelectValue placeholder="Select semester" />
+                  <SelectTrigger id="semester" className="bg-background/50">
+                    <SelectValue placeholder="Select current year" />
                   </SelectTrigger>
                   <SelectContent>
                     {semesters.map((sem) => (
-                      <SelectItem key={sem} value={sem}>
-                        Semester {sem}
-                      </SelectItem>
+                      <SelectItem key={sem} value={sem}>Semester {sem}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="phone">Phone Number</Label>
+                <Label htmlFor="phone">Active Mobile Number</Label>
                 <Input
                   id="phone"
                   type="tel"
-                  placeholder="Enter your phone number"
-                  value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  placeholder="+91"
+                  className="bg-background/50"
+                  value={formData.phoneNumber}
+                  onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
+                  required
                 />
               </div>
 
-              <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="email">Email</Label>
+              <div className="space-y-2">
+                <Label htmlFor="email">Official College Email</Label>
                 <Input
                   id="email"
                   type="email"
-                  placeholder="Enter your email"
+                  className="bg-background/50 opacity-70"
                   value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  disabled
                 />
               </div>
             </div>
 
-            <div className="flex justify-end">
-              <Button type="submit" className="gap-2">
-                <Save className="h-4 w-4" />
-                Save Profile
+            <div className="flex justify-end pt-4 border-t border-border/50">
+              <Button type="submit" disabled={saving} className="gap-2 px-8 py-6 text-lg h-auto shadow-lg hover:shadow-primary/20 transition-all">
+                {saving ? <Loader2 className="h-5 w-5 animate-spin" /> : <Save className="h-5 w-5" />}
+                {saving ? "Updating..." : "Update Official Profile"}
               </Button>
             </div>
           </form>

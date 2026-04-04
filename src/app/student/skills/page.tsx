@@ -1,12 +1,11 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
-import { Code, Plus, X, Save } from "lucide-react"
+import { Code, Plus, X, Save, Loader2 } from "lucide-react"
 
 type SkillCategory = {
   name: string
@@ -14,16 +13,40 @@ type SkillCategory = {
 }
 
 const defaultCategories: SkillCategory[] = [
-  { name: "Programming Languages", skills: [] },
-  { name: "Frameworks", skills: [] },
-  { name: "Tools", skills: [] },
-  { name: "Databases", skills: [] },
-  { name: "Technologies", skills: [] },
+  { name: "Programming Languages", key: "programmingLanguages", skills: [] },
+  { name: "Frameworks", key: "frameworks", skills: [] },
+  { name: "Tools", key: "tools", skills: [] },
+  { name: "Databases", key: "databases", skills: [] },
+  { name: "Technologies", key: "technologies", skills: [] },
 ]
 
 export default function SkillsPage() {
-  const [categories, setCategories] = useState<SkillCategory[]>(defaultCategories)
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [categories, setCategories] = useState<any[]>(defaultCategories)
   const [newSkill, setNewSkill] = useState<Record<string, string>>({})
+
+  // Load skills from Supabase
+  useEffect(() => {
+    async function fetchSkills() {
+      try {
+        const res = await fetch('/api/profile');
+        const data = await res.json();
+        if (data.profile?.skills) {
+          const loaded = defaultCategories.map(cat => ({
+            ...cat,
+            skills: data.profile.skills[cat.key] || []
+          }));
+          setCategories(loaded);
+        }
+      } catch (err) {
+        console.error("Load skills error:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchSkills();
+  }, []);
 
   const addSkill = (categoryName: string) => {
     const skill = newSkill[categoryName]?.trim()
@@ -56,14 +79,42 @@ export default function SkillsPage() {
     }
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    console.log("Skills data:", categories)
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    
+    const skillsPayload = categories.reduce((acc, cat) => {
+      acc[cat.key] = cat.skills;
+      return acc;
+    }, {} as any);
+
+    try {
+      const res = await fetch('/api/profile/skills', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ skills: skillsPayload }),
+      });
+      if (res.ok) {
+        alert("Skills saved successfully!");
+      }
+    } catch (err) {
+      console.error("Save skills error:", err);
+      alert("Failed to save skills.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    )
   }
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div>
         <h1 className="text-2xl font-semibold text-foreground">Skills</h1>
         <p className="text-muted-foreground mt-1">Add your technical skills</p>
@@ -78,7 +129,6 @@ export default function SkillsPage() {
                 <CardTitle className="text-base">{category.name}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {/* Add Skill Input */}
                 <div className="flex gap-2">
                   <Input
                     placeholder={`Add ${category.name.toLowerCase()}`}
@@ -98,12 +148,11 @@ export default function SkillsPage() {
                   </Button>
                 </div>
 
-                {/* Skills Tags */}
                 <div className="flex flex-wrap gap-2 min-h-[2.5rem]">
                   {category.skills.length === 0 ? (
                     <p className="text-sm text-muted-foreground">No skills added yet</p>
                   ) : (
-                    category.skills.map((skill) => (
+                    category.skills.map((skill: string) => (
                       <Badge
                         key={skill}
                         variant="secondary"
@@ -127,9 +176,9 @@ export default function SkillsPage() {
         </div>
 
         <div className="flex justify-end mt-6">
-          <Button type="submit" className="gap-2">
-            <Save className="h-4 w-4" />
-            Save Skills
+          <Button type="submit" disabled={saving} className="gap-2">
+            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+            {saving ? "Saving..." : "Save Skills"}
           </Button>
         </div>
       </form>

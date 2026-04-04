@@ -1,32 +1,43 @@
 import { NextRequest, NextResponse } from 'next/server';
-
-export const dynamic = 'force-dynamic';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
-import connectDB from '@/lib/mongodb';
-import StudentProfile from '@/models/StudentProfile';
+import { supabase } from '@/lib/supabase';
 
-// GET /api/profile — fetch the current student's profile
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   const session = await getServerSession(authOptions);
   if (!session?.user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  await connectDB();
+  const userId = (session.user as { id: string }).id;
 
-  const profile = await StudentProfile.findOne({
-    userId: (session.user as { id: string }).id,
-  }).lean();
+  try {
+    // 1. Fetching via Supabase HTTPS SDK (Bypasses Port 5432 / 6543 blocks)
+    const { data: profile, error } = await supabase
+      .from('StudentProfile')
+      .select(`
+        *,
+        semesters:SemesterGPA(*),
+        projects:Project(*),
+        experience:WorkExperience(*)
+      `)
+      .eq('userId', userId)
+      .single();
 
-  if (!profile) {
-    return NextResponse.json({ profile: null }, { status: 200 });
+    if (error && error.code !== 'PGRST116') {
+      console.error('Supabase fetch error:', error);
+      throw error;
+    }
+
+    return NextResponse.json({ profile }, { status: 200 });
+  } catch (error: any) {
+    console.error('Fetch profile error:', error.message);
+    return NextResponse.json({ error: 'Failed to connect to cloud database over HTTPS.' }, { status: 500 });
   }
-
-  return NextResponse.json({ profile }, { status: 200 });
 }
 
-// POST /api/profile — create or update the current student's profile
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session?.user) {
@@ -36,88 +47,31 @@ export async function POST(req: NextRequest) {
   const userId = (session.user as { id: string }).id;
   const body = await req.json();
 
-  const {
-    fullName,
-    rollNumber,
-    collegeId,
-    branch,
-    section,
-    phoneNumber,
-    email,
-    currentSemester,
-  } = body;
-
-  // Validate required fields
-  if (
-    !fullName ||
-    !rollNumber ||
-    !collegeId ||
-    !branch ||
-    !section ||
-    !phoneNumber ||
-    !email ||
-    !currentSemester
-  ) {
-    return NextResponse.json(
-      { error: 'All fields are required.' },
-      { status: 400 }
-    );
-  }
-
-  // Validate phone number
-  if (!/^[6-9]\d{9}$/.test(phoneNumber)) {
-    return NextResponse.json(
-      { error: 'Please enter a valid 10-digit Indian mobile number.' },
-      { status: 400 }
-    );
-  }
-
-  // Validate semester range
-  const sem = Number(currentSemester);
-  if (sem < 1 || sem > 8) {
-    return NextResponse.json(
-      { error: 'Semester must be between 1 and 8.' },
-      { status: 400 }
-    );
-  }
-
-  await connectDB();
+  const { fullName, rollNumber, collegeId, branch, section, phoneNumber, email, currentSemester } = body;
 
   try {
-    const profile = await StudentProfile.findOneAndUpdate(
-      { userId },
-      {
-        userId,
-        fullName,
-        rollNumber,
-        collegeId,
-        branch,
-        section: section.toUpperCase(),
-        phoneNumber,
-        email: email.toLowerCase(),
-        currentSemester: sem,
-      },
-      { upsert: true, new: true, runValidators: true }
-    );
+    // 2. Saving via Supabase HTTPS SDK (Instant Write over Port 443)
+    const { data: profile, error } = await supabase
+      .from('StudentProfile')
+      .upsert({ 
+        userId, 
+        fullName, 
+        rollNumber, 
+        collegeId, 
+        branch, 
+        section, 
+        phoneNumber, 
+        email, 
+        currentSemester 
+      })
+      .select()
+      .single();
 
-    return NextResponse.json(
-      { message: 'Profile saved successfully.', profile },
-      { status: 200 }
-    );
-  } catch (error: unknown) {
-    console.error('Profile save error:', error);
-    if (error instanceof Error && error.message.includes('E11000')) {
-      return NextResponse.json(
-        { error: 'Roll number already exists. Please check your roll number.' },
-        { status: 409 }
-      );
-    }
-    if (error instanceof Error) {
-      return NextResponse.json({ error: error.message }, { status: 400 });
-    }
-    return NextResponse.json(
-      { error: 'Internal server error. Please try again.' },
-      { status: 500 }
-    );
+    if (error) throw error;
+
+    return NextResponse.json({ message: 'Profile saved successfully via HTTPS.', profile }, { status: 200 });
+  } catch (error: any) {
+    console.error('Profile save error:', error.message);
+    return NextResponse.json({ error: 'Failed to save changes over HTTPS.' }, { status: 500 });
   }
 }

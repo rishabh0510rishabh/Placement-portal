@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
+import bcrypt from 'bcryptjs';
 
 export const dynamic = 'force-dynamic';
-import connectDB from '@/lib/mongodb';
-import User from '@/models/User';
 
 export async function POST(req: NextRequest) {
   try {
@@ -17,7 +17,8 @@ export async function POST(req: NextRequest) {
     }
 
     // Enforce RKGIT email domain for students
-    if (!email.endsWith('@rkgit.edu.in')) {
+    const lowerEmail = email.toLowerCase();
+    if (!lowerEmail.endsWith('@rkgit.edu.in')) {
       return NextResponse.json(
         { error: 'Only @rkgit.edu.in email addresses are allowed for registration.' },
         { status: 400 }
@@ -32,10 +33,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    await connectDB();
-
     // Check if user already exists
-    const existingUser = await User.findOne({ email: email.toLowerCase() });
+    const existingUser = await prisma.user.findUnique({
+      where: { email: lowerEmail },
+    });
+
     if (existingUser) {
       return NextResponse.json(
         { error: 'An account with this email already exists.' },
@@ -43,19 +45,24 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Hash password for Postgres storage
+    const hashedPassword = await bcrypt.hash(password, 12);
+
     // Create new student user
-    const user = await User.create({
-      name,
-      email: email.toLowerCase(),
-      password,
-      role: 'student',
+    const user = await prisma.user.create({
+      data: {
+        name,
+        email: lowerEmail,
+        password: hashedPassword,
+        role: 'student',
+      },
     });
 
     return NextResponse.json(
       {
         message: 'Account created successfully.',
         user: {
-          id: user._id,
+          id: user.id,
           name: user.name,
           email: user.email,
           role: user.role,
@@ -65,12 +72,6 @@ export async function POST(req: NextRequest) {
     );
   } catch (error: unknown) {
     console.error('Registration error:', error);
-    if (error instanceof Error && error.message.includes('E11000')) {
-      return NextResponse.json(
-        { error: 'An account with this email already exists.' },
-        { status: 409 }
-      );
-    }
     return NextResponse.json(
       { error: 'Internal server error. Please try again.' },
       { status: 500 }

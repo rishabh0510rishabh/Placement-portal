@@ -1,40 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-
-export const dynamic = 'force-dynamic';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
-import connectDB from '@/lib/mongodb';
-import StudentProfile from '@/models/StudentProfile';
+import { supabase } from '@/lib/supabase';
 
-// GET /api/profile/projects
-export async function GET() {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
-  await connectDB();
-
-  const profile = await StudentProfile.findOne({
-    userId: (session.user as { id: string }).id,
-  })
-    .select('projects')
-    .lean();
-
-  if (!profile) {
-    return NextResponse.json(
-      { error: 'Profile not found. Please complete your basic profile first.' },
-      { status: 404 }
-    );
-  }
-
-  return NextResponse.json(
-    { projects: profile.projects || [] },
-    { status: 200 }
-  );
-}
-
-// POST /api/profile/projects
+// POST /api/profile/projects — Add or update a project via HTTPS
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session?.user) {
@@ -42,62 +11,63 @@ export async function POST(req: NextRequest) {
   }
 
   const userId = (session.user as { id: string }).id;
-  const body = await req.json();
-
-  const { projects } = body;
-
-  if (!Array.isArray(projects)) {
-    return NextResponse.json(
-      { error: 'Invalid data format. Expected an array of projects.' },
-      { status: 400 }
-    );
-  }
-
-  // Validate fields for each project
-  const sanitizedProjects = projects.map((p: any) => ({
-    title: String(p.title || '').trim(),
-    description: String(p.description || '').trim(),
-    technologies: Array.isArray(p.technologies)
-      ? p.technologies.map((t: any) => String(t).trim()).filter((t: string) => t)
-      : [],
-    githubLink: p.githubLink ? String(p.githubLink).trim() : undefined,
-  }));
-
-  // Check required fields
-  for (const p of sanitizedProjects) {
-    if (!p.title || !p.description) {
-      return NextResponse.json(
-        { error: 'Title and description are required for all projects.' },
-        { status: 400 }
-      );
-    }
-  }
-
-  await connectDB();
+  const { id, title, description, technologies, githubLink } = await req.json();
 
   try {
-    const profile = await StudentProfile.findOneAndUpdate(
-      { userId },
-      { $set: { projects: sanitizedProjects } },
-      { new: true, runValidators: true }
-    ).select('projects');
+    const { data: profile } = await supabase
+      .from('StudentProfile')
+      .select('id')
+      .eq('userId', userId)
+      .single();
 
-    if (!profile) {
-      return NextResponse.json(
-        { error: 'Profile not found. Please complete your basic profile first.' },
-        { status: 404 }
-      );
-    }
+    if (!profile) return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
 
-    return NextResponse.json(
-      { message: 'Projects saved successfully.', projects: profile.projects },
-      { status: 200 }
-    );
+    const newId = id || `proj_${Date.now()}`;
+    const { data: project, error } = await supabase
+      .from('Project')
+      .upsert({
+        id: id || undefined, // Supabase generates if empty, or we pass existing
+        studentProfileId: profile.id,
+        title,
+        description,
+        technologies,
+        githubLink
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    return NextResponse.json({ message: 'Project saved via HTTPS', project }, { status: 200 });
   } catch (error: any) {
-    console.error('Projects save error:', error);
-    return NextResponse.json(
-      { error: error.message || 'Internal server error.' },
-      { status: 500 }
-    );
+    console.error('Project save error:', error.message);
+    return NextResponse.json({ error: 'Failed to save project over HTTPS' }, { status: 500 });
+  }
+}
+
+// DELETE /api/profile/projects — Delete a project via HTTPS
+export async function DELETE(req: NextRequest) {
+  const session = await getServerSession(authOptions);
+  if (!session?.user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const { searchParams } = new URL(req.url);
+  const id = searchParams.get('id');
+
+  if (!id) return NextResponse.json({ error: 'Project ID required' }, { status: 400 });
+
+  try {
+    const { error } = await supabase
+      .from('Project')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw error;
+
+    return NextResponse.json({ message: 'Project deleted over HTTPS' }, { status: 200 });
+  } catch (error: any) {
+    console.error('Project delete error:', error.message);
+    return NextResponse.json({ error: 'Failed to delete project.' }, { status: 500 });
   }
 }
