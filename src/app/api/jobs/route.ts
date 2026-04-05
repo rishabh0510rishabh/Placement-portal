@@ -59,11 +59,16 @@ export async function POST(req: NextRequest) {
     }
 
     // Map branches to enum safely
-    // 1. Try exact match, 2. Try hyphenated (common in Supabase enums), 3. Catch invalid values
     const safeBranches: string[] = (body.allowedBranches as string[]).map(b => b.replace('_', '-'));
 
     // 1. Create the job listing over HTTPS
-    const now = new Date().toISOString();
+    const now = new Date();
+    const deadlineDate = new Date(body.deadline);
+    if (deadlineDate < now) {
+      return NextResponse.json({ error: "Job application deadline cannot be in the past." }, { status: 400 });
+    }
+
+    const nowISO = now.toISOString();
     const { data: newJob, error: jobError } = await supabase
       .from('JobListing')
       .insert({
@@ -78,10 +83,10 @@ export async function POST(req: NextRequest) {
         location: body.location,
         status: 'active',
         allowedBranches: safeBranches,
-        deadline: new Date(body.deadline).toISOString(),
+        deadline: deadlineDate.toISOString(),
         requiredSkills: body.requiredSkills || [],
-        createdAt: now,
-        updatedAt: now,
+        createdAt: nowISO,
+        updatedAt: nowISO,
       })
       .select('*, company:Company(*)')
       .single();
@@ -131,6 +136,16 @@ export async function PATCH(req: NextRequest) {
 
   try {
     const body = await req.json();
+
+    // Date validation: Deadline must be in the future if provided
+    if (body.deadline) {
+      const deadlineDate = new Date(body.deadline);
+      const now = new Date();
+      if (deadlineDate < now) {
+        return NextResponse.json({ error: "Modified job deadline cannot be set in the past." }, { status: 400 });
+      }
+    }
+
     const safeBranches: string[] = (body.allowedBranches as string[]).map(b => b.replace('_', '-'));
     
     const { data: updatedJob, error } = await supabase
