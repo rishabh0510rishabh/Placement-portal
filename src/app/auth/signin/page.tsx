@@ -39,8 +39,11 @@ function SignInForm() {
         toast.error(result.error)
       } else {
         toast.success("Namaste! Welcome back to RKGIT Portal.")
-        router.push(callbackUrl === "/" ? "/dashboard-redirect" : callbackUrl)
-        router.refresh()
+        // Small delay to ensure session cookies are synced before middleware gates the redirect
+        setTimeout(() => {
+          router.push(callbackUrl === "/" ? "/dashboard-redirect" : callbackUrl)
+          router.refresh()
+        }, 1200)
       }
     } catch (err) {
       toast.error("An unexpected server error occurred")
