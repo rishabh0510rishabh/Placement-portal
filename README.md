@@ -1,256 +1,106 @@
-# RKGIT Placement Portal
+# 🏛️ RKGIT Placement Portal
+### **The Digital Backbone of Institutional Recruitment**
 
-A centralized, professional web platform designed to streamline the placement process for students and placement coordinators at **Raj Kumar Goel Institute of Technology (RKGIT)**.
+[![Next.js 16](https://img.shields.io/badge/Next.js-16-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Supabase](https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)](https://supabase.com/)
+[![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
 
----
-
-# Overview
-
-The portal modernizes the recruitment experience with a premium **“Intellectual Atelier” design system**.
-
-It enables:
-
-* **Students** to manage their professional profiles and apply for job opportunities.
-* **Placement administrators** to manage job postings, review applicants, and monitor recruitment progress efficiently.
-
-The goal is to create a **single unified platform** that replaces manual placement coordination with a structured digital system.
+A centralized, professional web ecosystem designed to transform the placement landscape for students and coordinators at **Raj Kumar Goel Institute of Technology (RKGIT)**.
 
 ---
 
-# Key Features
-
-## 🎓 Student Ecosystem
-
-### Advanced Profile Management
-
-Students can create detailed profiles including:
-
-* Personal information
-* Academic history
-* Skills
-* Projects
-* Resume links
-
-### Academic Tracking
-
-* Semester-wise GPA entry
-* Automatic **CGPA calculation**
-
-### Smart Eligibility System
-
-Automatically checks eligibility before application based on:
-
-* CGPA requirements
-* Branch restrictions
-* Backlog conditions
-* Required skills
-
-### Resume Management
-
-Students can upload or attach **multiple resumes** tailored to different job roles.
-
-### Application Tracking
-
-Students can track real-time status of their applications:
-
-* Applied
-* Shortlisted
-* Selected
-* Rejected
-
-### Dashboard Alerts
-
-Instant notifications for:
-
-* New job postings
-* Status updates
-* Important placement announcements
+## 🌟 Vision
+The portal replaces fragmented, manual coordination with a unified, data-driven platform. Built on the **"Intellectual Atelier"** design system, it delivers a high-performance, editorial-style interface that mirrors the professionalism of elite corporate environments.
 
 ---
 
-# 🛡️ Administrative Suite
+## 🔥 Key Competitive Advantages
 
-### Comprehensive Dashboard
+### 🎓 For Students: The Career Command Center
+*   **Intelligent Eligibility Engine**: Real-time validation against CGPA, Branch, and Backlog rules. Never waste time on ineligible applications.
+*   **High-Fidelity Profiles**: Comprehensive academic tracking with automatic CGPA calculations and multi-resume management.
+*   **Live Discovery Engine**: Deep-search job listings with instant compatibility feedback.
+*   **Telemetric Dashboard**: Beautifully prioritized activity feeds and application tracking.
 
-Placement coordinators can monitor:
-
-* Total registered students
-* Active job postings
-* Ongoing recruitment processes
-
-### Student Management
-
-Advanced search and filtering based on:
-
-* Branch
-* CGPA
-* Skills
-* Eligibility
-
-### Job Posting & Management
-
-Admins can:
-
-* Create job postings
-* Define eligibility criteria
-* Manage application deadlines
-* Edit or remove listings
-
-### Applicant Review Workflow
-
-Recruiters and admins can:
-
-* View applicant lists
-* Download resumes
-* Update candidate statuses
-
-### Data Export
-
-Generate **server-side CSV reports** for:
-
-* Applicant lists
-* Recruitment statistics
-* Placement data analysis
+### 🛡️ For Administrators: The Recruitment Nexus
+*   **System Telemetry**: Real-time metrics on student engagement and company demand pipelines.
+*   **Zero-Effort Management**: Advanced student filtering, bulk actions, and server-side **CSV data extraction**.
+*   **Active Pipeline Control**: Instant job posting, deadline management, and candidate status orchestration.
 
 ---
 
-# 🔒 Security & Access Control
+## ⚡ Technical Excellence & Performance
+We didn't just build a portal; we built a high-performance machine:
 
-### Role-Based Access Control (RBAC)
-
-Separate environments for:
-
-* Students
-* Administrators
-
-### Domain Restricted Registration
-
-Student registration is restricted to official email domain:
-
-```
-@rkgit.edu.in
-```
-
-### Secure Authentication
-
-Implemented using:
-
-* **NextAuth.js**
-* **JWT Tokens**
-* **BcryptJS Password Hashing**
+- **Ultra-Low Latency**: Optimized API layers using concurrent database queries (`Promise.all`) and selective column fetching.
+- **Premium UX**: High-fidelity **Skeleton Loaders** and custom **Synchronizing Screens** ensure a smooth, "no-flicker" experience even on slower networks.
+- **Vercel Telemetry**: Integrated **Speed Insights** and **Analytics** for continuous performance monitoring.
+- **Robust Security**: Role-Based Access Control (RBAC) with domain-restricted registration (@rkgit.edu.in).
 
 ---
 
-# Tech Stack
-
-### Frontend
-
-* Next.js 16 (React 19)
-* TypeScript
-
-### Styling
-
-* Vanilla CSS
-* Custom **Intellectual Atelier Design System**
-
-### Backend
-
-* Node.js
-
-### Database
-
-* MongoDB (via Mongoose)
-
-### Authentication
-
-* NextAuth.js
-* JWT
-
-### Deployment
-
-Optimized for:
-
-* **Vercel**
-* **Node.js Production Servers**
+## 🛠️ Tech Stack
+| Layer | Technology |
+| :--- | :--- |
+| **Framework** | Next.js 16 (React 19) + TypeScript |
+| **Database** | Supabase (PostgreSQL) |
+| **Auth** | NextAuth.js + JWT + Argon2/Bcrypt |
+| **Styling** | Vanilla CSS + Intellectual Atelier Design System |
+| **Monitoring** | Vercel Analytics + Speed Insights |
+| **Deployment** | Docker + Vercel Standalone |
 
 ---
 
-# Getting Started
+## 🚀 Deployment & Setup
 
-## Prerequisites
+### 🐋 Docker Installation (Recommended)
+The fastest way to get the production-ready portal running:
 
-* Node.js **18.x or higher**
-* MongoDB instance (Local or MongoDB Atlas)
+1.  **Clone the Repository**
+    ```bash
+    git clone https://github.com/rishabh0510rishabh/Placement-portal.git
+    cd Placement-portal
+    ```
+2.  **Environment Setup**
+    Ensure your `.env.local` contains your Supabase and NextAuth secrets.
+3.  **Build and Run**
+    ```bash
+    docker build -t placement-portal .
+    docker run -p 3000:3000 placement-portal
+    ```
+    *Access the portal at `http://localhost:3000`.*
 
----
-
-## Installation
-
-### 1. Clone the Repository
-
-```bash
-git clone https://github.com/rishabh0510rishabh/Placement-portal.git
-```
-
-### 2. Install Dependencies
-
-```bash
-npm install
-```
-
-### 3. Configure Environment Variables
-
-Create a `.env.local` file and add:
-
-```
-MONGODB_URI=your_mongodb_uri
-NEXTAUTH_SECRET=your_nextauth_secret
-```
-
-Add any additional environment variables required by the project.
-
----
-
-### 4. Run Development Server
-
-```bash
-npm run dev
-```
-
-The application will run locally on:
-
-```
-http://localhost:3000
-```
+### 💻 Manual Setup
+1.  **Install dependencies**
+    ```bash
+    npm install
+    ```
+2.  **Configure `.env.local`**
+    ```env
+    NEXTAUTH_URL=http://localhost:3000
+    NEXTAUTH_SECRET=your_secret
+    NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+    NEXT_PUBLIC_SUPABASE_ANON_KEY=your_key
+    ```
+3.  **Launch Dev**
+    ```bash
+    npm run dev
+    ```
 
 ---
 
-# Business Model & Infrastructure Documentation
+## 📄 Corporate & Infrastructure Strategy
+Designed for scale (10K+ students), the portal includes a comprehensive roadmap for infrastructure management, revenue modeling, and market competition.
 
-Detailed documentation covering:
-
-* Target Customers
-* Revenue Model
-* Cost Structure
-* Infrastructure Strategy
-* Handling 10K+ Students
-* Competitor Analysis (including Superset)
-
-📄 **Full Documentation:**
-[https://drive.google.com/file/d/1zU2gab3v7nXcGdtdm6HmEuwVn0uU6OGF/view?usp=drive_link](https://drive.google.com/file/d/1zU2gab3v7nXcGdtdm6HmEuwVn0uU6OGF/view?usp=drive_link)
 
 ---
 
-# Design Philosophy
-
-This project uses the **Intellectual Atelier Design System**, inspired by editorial design and premium digital interfaces.
-
-Key characteristics:
-
-* Expansive **negative space**
-* High-contrast **typography**
-* **Glassmorphism-inspired UI elements**
-* Smooth **micro-interactions**
-* A refined and professional aesthetic suitable for **academic and corporate environments**
+## 🎨 Design Philosophy: "Intellectual Atelier"
+Moving away from generic admin templates, this portal adopts a premium aesthetic:
+-   **Negative Space**: Expansive use of whitespace for focus.
+-   **Tonal Layering**: Subtle shadows and glassmorphism.
+-   **Typography Focus**: High-contrast headings and refined micro-interactions.
 
 ---
+© 2026 RKGIT Placement Portal Development Team
