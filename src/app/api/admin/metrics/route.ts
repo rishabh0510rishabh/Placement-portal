@@ -12,7 +12,7 @@ export async function GET() {
   }
 
   try {
-    // Fetch counts for the stats grid
+    // 1. Fetch system-wide counts for telemetry cards
     const [
       { count: totalStudents },
       { count: totalCompanies },
@@ -25,20 +25,30 @@ export async function GET() {
       supabase.from('JobApplication').select('id', { count: 'exact', head: true })
     ]);
 
-    // Fetch recent applications
-    const { data: recentApplications } = await supabase
+    // 2. Fetch live engagement feed (Recent applications)
+    // Using StudentProfile link as JobApplication has studentId
+    const { data: recentAppsRaw } = await supabase
       .from('JobApplication')
       .select(`
         id,
         status,
         appliedAt,
-        user:User(fullName, email),
-        job:JobListing(role, company:Company(name))
+        student:StudentProfile(fullName, email),
+        job:JobListing(
+          role, 
+          company:Company(name)
+        )
       `)
       .order('appliedAt', { ascending: false })
       .limit(5);
 
-    // Fetch companies by application count (Only needed fields)
+    // Map to the format expected by Dashboard.tsx (app.user.fullName) or standardize
+    const recentApplications = recentAppsRaw?.map(app => ({
+      ...app,
+      user: app.student // Map student profile to 'user' for dashboard compatibility
+    })) || [];
+
+    // 3. Fetch recruiter demand pipelines
     const { data: topCompaniesRaw } = await supabase
       .from('JobListing')
       .select(`
@@ -47,7 +57,6 @@ export async function GET() {
         applications:JobApplication(count)
       `);
 
-    // Grouping logic for top companies
     const companyStats: { [key: string]: { name: string; applications: number } } = {};
     topCompaniesRaw?.forEach((item: any) => {
       const name = item.company?.name || 'Unknown';
@@ -68,11 +77,12 @@ export async function GET() {
         totalJobs: totalJobs || 0,
         totalApplications: totalApplications || 0
       },
-      recentApplications: recentApplications || [],
+      recentApplications,
       topCompanies
     }, { status: 200 });
+
   } catch (error: any) {
-    console.error('Metrics fetch error:', error.message);
+    console.error('System metrics failure:', error.message);
     return NextResponse.json({ error: 'Failed to aggregate system telemetry' }, { status: 500 });
   }
 }

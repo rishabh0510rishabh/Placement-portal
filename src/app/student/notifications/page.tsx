@@ -1,155 +1,145 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Bell, Building2, CheckCircle2, AlertCircle, Info, Check } from "lucide-react"
-
-type NotificationType = "job" | "application" | "shortlist" | "info"
-
-type Notification = {
-  id: string
-  type: NotificationType
-  title: string
-  message: string
-  time: string
-  isRead: boolean
-}
-
-const mockNotifications: Notification[] = [
-  {
-    id: "1",
-    type: "job",
-    title: "New Job Posting",
-    message: "TCS has posted a new opening for Software Developer position. Apply before Apr 15, 2026.",
-    time: "2 hours ago",
-    isRead: false,
-  },
-  {
-    id: "2",
-    type: "shortlist",
-    title: "Shortlisted",
-    message: "Congratulations! You have been shortlisted for the interview at HCL Technologies.",
-    time: "1 day ago",
-    isRead: false,
-  },
-  {
-    id: "3",
-    type: "application",
-    title: "Application Update",
-    message: "Your application for System Engineer at Infosys is now under review.",
-    time: "2 days ago",
-    isRead: true,
-  },
-  {
-    id: "4",
-    type: "job",
-    title: "New Job Posting",
-    message: "Wipro has posted a new opening for Project Engineer position.",
-    time: "3 days ago",
-    isRead: true,
-  },
-  {
-    id: "5",
-    type: "info",
-    title: "Placement Drive",
-    message: "A new placement drive is scheduled for next week. Make sure your profile is complete.",
-    time: "5 days ago",
-    isRead: true,
-  },
-]
-
-const typeConfig = {
-  job: { icon: Building2, color: "text-primary" },
-  application: { icon: AlertCircle, color: "text-warning" },
-  shortlist: { icon: CheckCircle2, color: "text-success" },
-  info: { icon: Info, color: "text-muted-foreground" },
-}
+import { Bell, Building2, CheckCircle2, AlertCircle, Info, Check, Loader2, Clock } from "lucide-react"
+import { toast } from "sonner"
+import { cn } from "@/lib/utils"
 
 export default function NotificationsPage() {
-  const [notifications, setNotifications] = useState<Notification[]>(mockNotifications)
+  const [notifications, setNotifications] = useState<any[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    fetchNotifications()
+  }, [])
+
+  const fetchNotifications = async () => {
+    setIsLoading(true)
+    try {
+      const res = await fetch("/api/notifications")
+      const result = await res.json()
+      if (res.ok) {
+        setNotifications(result.notifications || [])
+      } else {
+        toast.error("Failed to sync alert stream")
+      }
+    } catch (err) {
+      toast.error("Telemetry link failed")
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   const unreadCount = notifications.filter((n) => !n.isRead).length
 
-  const markAsRead = (id: string) => {
-    setNotifications(
-      notifications.map((n) =>
-        n.id === id ? { ...n, isRead: true } : n
-      )
-    )
+  const markAsRead = async (id: string) => {
+    // Local optimistic update
+    setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n))
+    // We could add a PATCH endpoint later if needed for persistence
   }
 
   const markAllAsRead = () => {
-    setNotifications(
-      notifications.map((n) => ({ ...n, isRead: true }))
-    )
+    setNotifications(prev => prev.map(n => ({ ...n, isRead: true })))
+  }
+
+  const formatDate = (dateStr: string) => {
+    const d = new Date(dateStr);
+    const now = new Date();
+    const diff = Math.floor((now.getTime() - d.getTime()) / (1000 * 60 * 60));
+    if (diff < 1) return "Just now";
+    if (diff < 24) return `${diff} hours ago`;
+    return d.toLocaleDateString();
+  }
+
+  const getIcon = (message: string) => {
+    const msg = message.toLowerCase()
+    if (msg.includes('shortlist') || msg.includes('congratulations') || msg.includes('hired')) return { icon: CheckCircle2, color: "text-emerald-500", bg: "bg-emerald-500/10" }
+    if (msg.includes('job') || msg.includes('posted') || msg.includes('opportunity')) return { icon: Building2, color: "text-primary", bg: "bg-primary/10" }
+    if (msg.includes('rejected') || msg.includes('closed')) return { icon: AlertCircle, color: "text-destructive", bg: "bg-destructive/10" }
+    return { icon: Info, color: "text-blue-500", bg: "bg-blue-500/10" }
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 md:space-y-10 w-full pb-10">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold text-foreground">Notifications</h1>
-          <p className="text-muted-foreground mt-1">
-            {unreadCount > 0 ? `${unreadCount} unread notification${unreadCount > 1 ? "s" : ""}` : "No new notifications"}
+          <h1 className="text-3xl font-extrabold text-white tracking-tight">System Alerts</h1>
+          <p className="text-gray-400 mt-1 font-light tracking-wide italic">
+            {unreadCount > 0 ? `Intercepted ${unreadCount} new high-priority transmissions` : "No new transmissions detected"}
           </p>
         </div>
         {unreadCount > 0 && (
-          <Button variant="outline" onClick={markAllAsRead} className="gap-2">
+          <Button variant="outline" onClick={markAllAsRead} className="gap-2 rounded-xl border-white/10 hover:bg-white/5">
             <Check className="h-4 w-4" />
-            Mark all as read
+            Clear All
           </Button>
         )}
       </div>
 
       {/* Notifications List */}
-      {notifications.length === 0 ? (
-        <Card className="bg-card border-border">
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <Bell className="h-12 w-12 text-muted-foreground mb-4" />
-            <p className="text-muted-foreground">No notifications yet</p>
+      {isLoading ? (
+        <div className="flex flex-col items-center justify-center py-24 gap-4 opacity-50">
+           <Loader2 className="h-10 w-10 animate-spin text-primary" />
+           <p className="text-xs font-black uppercase tracking-[0.2em]">Synchronizing Feed</p>
+        </div>
+      ) : notifications.length === 0 ? (
+        <Card className="bg-white/5 border-white/10 border-dashed shadow-xl overflow-hidden">
+          <CardContent className="flex flex-col items-center justify-center py-24 opacity-30">
+            <Bell className="h-20 w-20 mb-6" />
+            <p className="text-xs font-black uppercase tracking-[0.4em]">No Logs Found</p>
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-4">
           {notifications.map((notification) => {
-            const config = typeConfig[notification.type]
+            const config = getIcon(notification.message)
             const Icon = config.icon
 
             return (
               <Card
                 key={notification.id}
-                className={`bg-card border-border transition-colors ${
-                  !notification.isRead ? "border-l-2 border-l-primary" : ""
-                }`}
+                className={cn(
+                  "bg-white/5 border-white/10 hover:border-white/20 hover:bg-white/[0.04] transition-all shadow-xl backdrop-blur-sm group relative overflow-hidden cursor-pointer",
+                  !notification.isRead && "border-l-4 border-l-primary"
+                )}
+                onClick={() => !notification.isRead && markAsRead(notification.id)}
               >
-                <CardContent className="p-4">
-                  <div className="flex items-start gap-4">
-                    <div className={`p-2 rounded-lg bg-secondary shrink-0 ${config.color}`}>
-                      <Icon className="h-5 w-5" />
+                <CardContent className="p-6">
+                  <div className="flex items-start gap-6">
+                    <div className={cn("p-4 rounded-2xl shrink-0 group-hover:scale-110 transition-transform duration-500", config.bg, config.color)}>
+                      <Icon className="h-6 w-6" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-4">
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <h3 className="font-medium text-foreground">{notification.title}</h3>
+                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-3">
+                            <h3 className="text-lg font-bold text-white tracking-tight">System Transmission</h3>
                             {!notification.isRead && (
-                              <Badge className="bg-primary text-primary-foreground text-xs">New</Badge>
+                              <Badge className="bg-primary text-black font-black text-[9px] uppercase tracking-widest rounded-full py-0.5 border-none">Priority</Badge>
                             )}
                           </div>
-                          <p className="text-sm text-muted-foreground mt-1">{notification.message}</p>
-                          <p className="text-xs text-muted-foreground mt-2">{notification.time}</p>
+                          <p className="text-gray-400 text-sm leading-relaxed max-w-3xl">{notification.message}</p>
+                          <div className="flex items-center gap-1.5 text-[10px] text-gray-600 font-bold uppercase tracking-[0.1em] pt-2">
+                             <Clock className="h-3 w-3" />
+                             {formatDate(notification.createdAt)}
+                          </div>
                         </div>
+                        
                         {!notification.isRead && (
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => markAsRead(notification.id)}
-                            className="shrink-0"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              markAsRead(notification.id);
+                            }}
+                            className="shrink-0 text-[10px] font-black uppercase tracking-widest hover:bg-white/5 border border-transparent hover:border-white/10"
                           >
-                            Mark as read
+                            Mark Read
                           </Button>
                         )}
                       </div>
@@ -164,3 +154,4 @@ export default function NotificationsPage() {
     </div>
   )
 }
+

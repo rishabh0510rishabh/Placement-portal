@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from "react"
-import { Card, CardContent } from "@/components/ui/card"
+import { useState, useEffect } from "react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
@@ -20,233 +20,236 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { ClipboardList, Search, MoreHorizontal, FileText, CheckCircle, XCircle, Clock } from "lucide-react"
+import { ClipboardList, Search, MoreHorizontal, FileText, CheckCircle, XCircle, Clock, Loader2, User, Building2 } from "lucide-react"
+import { toast } from "sonner"
+import { cn } from "@/lib/utils"
 
-type ApplicationStatus = "applied" | "under_review" | "shortlisted" | "rejected" | "selected"
+type ApplicationStatus = "applied" | "shortlisted" | "interviewing" | "rejected" | "hired"
 
-type Application = {
-  id: string
-  studentName: string
-  studentEmail: string
-  company: string
-  role: string
-  appliedDate: string
-  cgpa: number
-  status: ApplicationStatus
-}
-
-const mockApplications: Application[] = [
-  {
-    id: "1",
-    studentName: "Rahul Kumar",
-    studentEmail: "rahul.kumar@rkgit.edu.in",
-    company: "TCS",
-    role: "Software Developer",
-    appliedDate: "Apr 1, 2026",
-    cgpa: 8.5,
-    status: "shortlisted",
-  },
-  {
-    id: "2",
-    studentName: "Priya Singh",
-    studentEmail: "priya.singh@rkgit.edu.in",
-    company: "Infosys",
-    role: "System Engineer",
-    appliedDate: "Mar 28, 2026",
-    cgpa: 9.0,
-    status: "selected",
-  },
-  {
-    id: "3",
-    studentName: "Amit Sharma",
-    studentEmail: "amit.sharma@rkgit.edu.in",
-    company: "Wipro",
-    role: "Project Engineer",
-    appliedDate: "Mar 25, 2026",
-    cgpa: 7.8,
-    status: "under_review",
-  },
-  {
-    id: "4",
-    studentName: "Sneha Gupta",
-    studentEmail: "sneha.gupta@rkgit.edu.in",
-    company: "TCS",
-    role: "Software Developer",
-    appliedDate: "Mar 20, 2026",
-    cgpa: 8.2,
-    status: "applied",
-  },
-  {
-    id: "5",
-    studentName: "Vikram Patel",
-    studentEmail: "vikram.patel@rkgit.edu.in",
-    company: "HCL",
-    role: "GET",
-    appliedDate: "Mar 15, 2026",
-    cgpa: 8.8,
-    status: "rejected",
-  },
-]
-
-const statusConfig: Record<ApplicationStatus, { label: string; color: string }> = {
-  applied: { label: "Applied", color: "bg-muted text-muted-foreground" },
-  under_review: { label: "Under Review", color: "bg-warning/10 text-warning" },
-  shortlisted: { label: "Shortlisted", color: "bg-primary/10 text-primary" },
-  rejected: { label: "Rejected", color: "bg-destructive/10 text-destructive" },
-  selected: { label: "Selected", color: "bg-success/10 text-success" },
+const statusConfig: Record<string, { label: string; color: string; icon: any }> = {
+  applied: { label: "Applied", color: "bg-secondary/20 text-secondary border-secondary/30", icon: Clock },
+  shortlisted: { label: "Shortlisted", color: "bg-primary/20 text-primary border-primary/30", icon: CheckCircle },
+  interviewing: { label: "Interviewing", color: "bg-blue-500/20 text-blue-400 border-blue-500/30", icon: MoreHorizontal },
+  rejected: { label: "Rejected", color: "bg-destructive/20 text-destructive border-destructive/30", icon: XCircle },
+  hired: { label: "Hired", color: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30", icon: CheckCircle },
 }
 
 export default function ApplicationsPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
   const [companyFilter, setCompanyFilter] = useState("all")
-  const [applications, setApplications] = useState(mockApplications)
+  const [isLoading, setIsLoading] = useState(true)
+  const [applications, setApplications] = useState<any[]>([])
 
-  const uniqueCompanies = [...new Set(mockApplications.map((app) => app.company))]
+  useEffect(() => {
+    fetchApplications()
+  }, [])
+
+  const fetchApplications = async () => {
+    setIsLoading(true)
+    try {
+      const res = await fetch("/api/admin/applications")
+      const result = await res.json()
+      if (res.ok) {
+        setApplications(result.applications || [])
+      } else {
+        toast.error(result.error || "Synchronicity failure in application stream")
+      }
+    } catch (err) {
+      toast.error("Telemetry link lost")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const uniqueCompanies = Array.from(new Set(applications.map((app) => app.job?.company?.name))).filter(Boolean)
 
   const filteredApplications = applications.filter((app) => {
+    const studentName = app.student?.fullName || ""
+    const studentEmail = app.student?.email || ""
+    const companyName = app.job?.company?.name || ""
     const matchesSearch =
-      app.studentName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      app.studentEmail.toLowerCase().includes(searchQuery.toLowerCase())
+      studentName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      studentEmail.toLowerCase().includes(searchQuery.toLowerCase())
     const matchesStatus = statusFilter === "all" || app.status === statusFilter
-    const matchesCompany = companyFilter === "all" || app.company === companyFilter
+    const matchesCompany = companyFilter === "all" || companyName === companyFilter
     return matchesSearch && matchesStatus && matchesCompany
   })
 
-  const updateStatus = (id: string, newStatus: ApplicationStatus) => {
-    setApplications(
-      applications.map((app) =>
-        app.id === id ? { ...app, status: newStatus } : app
-      )
-    )
+  const updateStatus = async (id: string, newStatus: string) => {
+    const originalStatus = applications.find(a => a.id === id)?.status
+    // Optimistic UI update
+    setApplications(prev => prev.map(a => a.id === id ? { ...a, status: newStatus } : a))
+    
+    try {
+      const res = await fetch("/api/admin/applications", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, status: newStatus })
+      })
+      if (!res.ok) throw new Error("Failed to update status")
+      toast.success(`Candidate status transitioned to ${newStatus.toUpperCase()}`)
+    } catch (err) {
+      toast.error("Status state mutation failed. Reverting...")
+      setApplications(prev => prev.map(a => a.id === id ? { ...a, status: originalStatus } : a))
+    }
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 md:space-y-10 w-full pb-10">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-semibold text-foreground">Applications</h1>
-        <p className="text-muted-foreground mt-1">Manage student applications</p>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-extrabold text-white tracking-tight">Application Terminal</h1>
+          <p className="text-gray-400 mt-1 font-light tracking-wide italic">Manage and audit candidate flow through recruitment funnels</p>
+        </div>
+        <div className="flex items-center gap-3">
+           <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+           <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest bg-white/5 px-3 py-1.5 rounded-full border border-white/10">Engine Online</span>
+        </div>
       </div>
 
       {/* Filters */}
-      <Card className="bg-card border-border">
-        <CardContent className="p-4">
-          <div className="flex flex-col sm:flex-row gap-4">
+      <Card className="bg-white/5 border-white/10 shadow-xl overflow-hidden backdrop-blur-sm">
+        <CardContent className="p-4 bg-white/[0.02]">
+          <div className="flex flex-col lg:flex-row gap-4">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
               <Input
-                placeholder="Search by student name or email..."
-                className="pl-10"
+                placeholder="Search by candidate identity or digital handle..."
+                className="pl-10 h-12 bg-white/5 border-white/10 rounded-xl"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
-            <Select value={companyFilter} onValueChange={setCompanyFilter}>
-              <SelectTrigger className="w-full sm:w-48">
-                <SelectValue placeholder="Company" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Companies</SelectItem>
-                {uniqueCompanies.map((company) => (
-                  <SelectItem key={company} value={company}>
-                    {company}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full sm:w-48">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Statuses</SelectItem>
-                {Object.entries(statusConfig).map(([status, config]) => (
-                  <SelectItem key={status} value={status}>
-                    {config.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="flex flex-col sm:flex-row gap-4">
+              <Select value={companyFilter} onValueChange={setCompanyFilter}>
+                <SelectTrigger className="w-full sm:w-56 h-12 rounded-xl bg-white/5 border-white/10">
+                  <SelectValue placeholder="Organization" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Companies</SelectItem>
+                  {uniqueCompanies.map((company) => (
+                    <SelectItem key={company as string} value={company as string}>
+                      {company as string}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-full sm:w-56 h-12 rounded-xl bg-white/5 border-white/10">
+                  <SelectValue placeholder="Pipeline State" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Statuses</SelectItem>
+                  {Object.entries(statusConfig).map(([status, config]) => (
+                    <SelectItem key={status} value={status}>
+                      {config.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </CardContent>
       </Card>
 
       {/* Applications Table */}
-      <Card className="bg-card border-border">
+      <Card className="bg-white/5 border-white/10 shadow-2xl overflow-hidden">
         <CardContent className="p-0 overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Student</TableHead>
-                <TableHead>Company</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead>CGPA</TableHead>
-                <TableHead>Applied Date</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredApplications.map((app) => (
-                <TableRow key={app.id}>
-                  <TableCell>
-                    <div>
-                      <p className="font-medium">{app.studentName}</p>
-                      <p className="text-sm text-muted-foreground">{app.studentEmail}</p>
-                    </div>
-                  </TableCell>
-                  <TableCell>{app.company}</TableCell>
-                  <TableCell>{app.role}</TableCell>
-                  <TableCell>{app.cgpa.toFixed(1)}</TableCell>
-                  <TableCell>{app.appliedDate}</TableCell>
-                  <TableCell>
-                    <Badge className={statusConfig[app.status].color}>
-                      {statusConfig[app.status].label}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem>
-                          <FileText className="h-4 w-4 mr-2" />
-                          View Resume
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => updateStatus(app.id, "under_review")}>
-                          <Clock className="h-4 w-4 mr-2" />
-                          Mark Under Review
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => updateStatus(app.id, "shortlisted")}>
-                          <CheckCircle className="h-4 w-4 mr-2" />
-                          Shortlist
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => updateStatus(app.id, "selected")}>
-                          <CheckCircle className="h-4 w-4 mr-2 text-success" />
-                          Select
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => updateStatus(app.id, "rejected")}
-                          className="text-destructive focus:text-destructive"
-                        >
-                          <XCircle className="h-4 w-4 mr-2" />
-                          Reject
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
+          {isLoading ? (
+            <div className="flex flex-col items-center justify-center py-24 gap-4 opacity-50">
+               <Loader2 className="h-10 w-10 animate-spin text-primary" />
+               <p className="text-xs font-black uppercase tracking-[0.2em]">Aggregating Pipeline Data</p>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader className="bg-white/[0.01]">
+                <TableRow className="hover:bg-transparent border-white/5">
+                  <TableHead className="font-black uppercase text-[10px] tracking-widest text-gray-500 py-6">Applicant Portfolio</TableHead>
+                  <TableHead className="font-black uppercase text-[10px] tracking-widest text-gray-500 py-6">Target Opportunity</TableHead>
+                  <TableHead className="font-black uppercase text-[10px] tracking-widest text-gray-500 py-6 text-center">Applied Date</TableHead>
+                  <TableHead className="font-black uppercase text-[10px] tracking-widest text-gray-500 py-6 text-center">Current State</TableHead>
+                  <TableHead className="font-black uppercase text-[10px] tracking-widest text-gray-500 py-6 text-right px-8">Operations</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-          {filteredApplications.length === 0 && (
-            <div className="flex flex-col items-center justify-center py-12">
-              <ClipboardList className="h-12 w-12 text-muted-foreground mb-4" />
-              <p className="text-muted-foreground">No applications found</p>
+              </TableHeader>
+              <TableBody>
+                {filteredApplications.map((app) => (
+                  <TableRow key={app.id} className="hover:bg-white/[0.02] border-white/5 transition-colors">
+                    <TableCell className="py-5">
+                      <div className="flex items-center gap-4">
+                        <div className="h-10 w-10 rounded-xl bg-white/5 flex items-center justify-center text-gray-400 border border-white/10 italic">
+                          {app.student?.fullName?.charAt(0) || <User className="h-4 w-4" />}
+                        </div>
+                        <div>
+                          <p className="font-bold text-white tracking-tight">{app.student?.fullName}</p>
+                          <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">{app.student?.email}</p>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="py-5">
+                      <div className="flex items-center gap-3">
+                         <div className="p-2 rounded-lg bg-primary/10">
+                            <Building2 className="h-3 w-3 text-primary" />
+                         </div>
+                         <div>
+                            <p className="font-bold text-white text-sm tracking-tight">{app.job?.company?.name}</p>
+                            <p className="text-[10px] text-gray-500 font-black uppercase tracking-[0.2em]">{app.job?.role}</p>
+                         </div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="py-5 text-center px-4 font-mono text-xs text-gray-400">
+                      {new Date(app.appliedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                    </TableCell>
+                    <TableCell className="py-5 text-center">
+                      <Badge className={cn("px-3 py-1 rounded-full text-[9px] uppercase tracking-widest font-black border shadow-sm", statusConfig[app.status]?.color)}>
+                        {statusConfig[app.status]?.label || app.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="py-5 text-right px-8">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl hover:bg-white/5 border border-transparent hover:border-white/10">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-56 bg-[#0a0a0a] border-white/10 rounded-xl">
+                          <DropdownMenuItem className="text-[11px] font-bold uppercase tracking-wider h-11 focus:bg-white/5 cursor-pointer" onClick={() => window.open(app.resumeUrl, '_blank')}>
+                            <FileText className="h-4 w-4 mr-3 text-blue-500" />
+                            Audit Resume Dossier
+                          </DropdownMenuItem>
+                          <div className="h-px bg-white/5 my-1" />
+                          <DropdownMenuItem className="text-[11px] font-bold uppercase tracking-wider h-11 focus:bg-white/5 cursor-pointer" onClick={() => updateStatus(app.id, "shortlisted")}>
+                            <CheckCircle className="h-4 w-4 mr-3 text-primary" />
+                            Transition to shortlist
+                          </DropdownMenuItem>
+                          <DropdownMenuItem className="text-[11px] font-bold uppercase tracking-wider h-11 focus:bg-white/5 cursor-pointer" onClick={() => updateStatus(app.id, "interviewing")}>
+                            <MoreHorizontal className="h-4 w-4 mr-3 text-blue-400" />
+                            Initiate Interview Phase
+                          </DropdownMenuItem>
+                          <DropdownMenuItem className="text-[11px] font-bold uppercase tracking-wider h-11 focus:bg-white/5 cursor-pointer" onClick={() => updateStatus(app.id, "hired")}>
+                            <CheckCircle className="h-4 w-4 mr-3 text-emerald-500" />
+                            Final Selection / Hired
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => updateStatus(app.id, "rejected")}
+                            className="text-[11px] font-bold uppercase tracking-wider h-11 focus:bg-destructive/10 text-destructive/80 focus:text-destructive cursor-pointer"
+                          >
+                            <XCircle className="h-4 w-4 mr-3" />
+                            Terminal Rejection
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+          {!isLoading && filteredApplications.length === 0 && (
+            <div className="flex flex-col items-center justify-center py-20 grayscale opacity-40">
+              <ClipboardList className="h-16 w-16 text-muted-foreground mb-4" />
+              <p className="text-muted-foreground font-black uppercase tracking-[0.3em] text-xs">No Candidate Records Detected</p>
             </div>
           )}
         </CardContent>
@@ -254,3 +257,4 @@ export default function ApplicationsPage() {
     </div>
   )
 }
+
