@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Building2, ClipboardList, CheckCircle2, Clock, Bell, ArrowUpRight, Loader2 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { StudentDashboardSkeleton } from "@/components/student/dashboard-skeleton"
 
 export default function StudentDashboard() {
   const [loading, setLoading] = useState(true)
@@ -29,11 +30,7 @@ export default function StudentDashboard() {
   }, []);
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    )
+    return <StudentDashboardSkeleton />;
   }
 
   const statsList = [
