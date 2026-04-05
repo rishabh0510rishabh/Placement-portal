@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
-import connectDB from '@/lib/mongodb';
-import Notification from '@/models/Notification';
+import { supabase } from '@/lib/supabase';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,24 +20,28 @@ export async function PATCH(
   const notificationId = resolvedParams.id;
 
   try {
-    await connectDB();
+    // 1. Update notification read status via HTTPS SDK
+    const { data: notification, error } = await supabase
+      .from('Notification')
+      .update({ read: true })
+      .eq('id', notificationId)
+      .eq('userId', userId)
+      .select()
+      .single();
 
-    const notification = await Notification.findOneAndUpdate(
-      { _id: notificationId, userId },
-      { read: true },
-      { new: true }
-    );
-
-    if (!notification) {
-      return NextResponse.json({ error: 'Notification not found' }, { status: 404 });
+    if (error) {
+      if (error.code === 'PGRST116') { // Record not found
+         return NextResponse.json({ error: 'Notification not found' }, { status: 404 });
+      }
+      throw error;
     }
 
     return NextResponse.json({ 
-      message: 'Notification marked as read', 
+      message: 'Notification marked as read over HTTPS', 
       notification 
     }, { status: 200 });
   } catch (error: any) {
-    console.error('Update notification error:', error);
-    return NextResponse.json({ error: 'Failed to update notification' }, { status: 500 });
+    console.error('Update notification error:', error.message);
+    return NextResponse.json({ error: 'Failed to update notification over HTTPS' }, { status: 500 });
   }
 }

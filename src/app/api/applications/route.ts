@@ -1,13 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-
-export const dynamic = 'force-dynamic';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
-import connectDB from '@/lib/mongodb';
-import JobApplication from '@/models/JobApplication';
-import JobListing from '@/models/JobListing';
+import { supabase } from '@/lib/supabase';
 
-// POST /api/applications
+export const dynamic = 'force-dynamic';
+
+// POST /api/applications - Submit a new job application via HTTPS
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
   
@@ -25,11 +23,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Job ID and Resume URL are required.' }, { status: 400 });
     }
 
-    await connectDB();
+    // 1. Verify job exists and is active over HTTPS
+    const { data: job, error: jobFetchError } = await supabase
+      .from('JobListing')
+      .select('status, company:Company(name)')
+      .eq('id', jobId)
+      .single();
 
-    // Verify job exists and is active
-    const job = await JobListing.findById(jobId).lean();
-    if (!job) {
+    if (jobFetchError || !job) {
       return NextResponse.json({ error: 'Job not found.' }, { status: 404 });
     }
     
@@ -37,33 +38,37 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'This job is no longer accepting applications.' }, { status: 400 });
     }
 
-    // Check if already applied
-    const existingApplication = await JobApplication.findOne({ jobId, userId });
-    if (existingApplication) {
-      return NextResponse.json({ error: 'You have already applied for this job.' }, { status: 400 });
+    // 2. Submit application via HTTPS
+    const { data: application, error: insertError } = await supabase
+      .from('JobApplication')
+      .insert({
+        jobId,
+        userId,
+        resumeUrl,
+        status: 'applied',
+        appliedAt: new Date().toISOString()
+      })
+      .select()
+      .single();
+
+    if (insertError) {
+      if (insertError.code === '23505') { // Unique constraint (already applied)
+        return NextResponse.json({ error: 'You have already applied for this job.' }, { status: 400 });
+      }
+      throw insertError;
     }
 
-    const application = await JobApplication.create({
-      jobId,
-      userId,
-      resumeUrl,
-    });
-
     return NextResponse.json(
-      { message: 'Application submitted successfully!', application },
+      { message: 'Application submitted over HTTPS successfully!', application },
       { status: 201 }
     );
   } catch (error: any) {
-    console.error('Job application error:', error);
-    // Handle mongoose duplicate key error explicitly just in case
-    if (error.code === 11000) {
-      return NextResponse.json({ error: 'You have already applied for this job.' }, { status: 400 });
-    }
-    return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
+    console.error('Job application error:', error.message);
+    return NextResponse.json({ error: error.message || 'Internal server error over HTTPS' }, { status: 500 });
   }
 }
 
-// GET /api/applications
+// GET /api/applications - Fetch student's own applications via HTTPS
 export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions);
   
@@ -74,19 +79,26 @@ export async function GET(req: NextRequest) {
   const userId = (session.user as any).id;
 
   try {
-    await connectDB();
+    // 3. Fetch applications with relational joins via HTTPS
+    const { data: applications, error } = await supabase
+      .from('JobApplication')
+      .select(`
+        *,
+        job:JobListing(
+          role,
+          location,
+          salaryCtc,
+          company:Company(name)
+        )
+      `)
+      .eq('userId', userId)
+      .order('appliedAt', { ascending: false });
 
-    const applications = await JobApplication.find({ userId })
-      .populate({
-        path: 'jobId',
-        select: 'companyName role ctc location status',
-      })
-      .sort({ createdAt: -1 })
-      .lean();
+    if (error) throw error;
 
-    return NextResponse.json({ applications }, { status: 200 });
+    return NextResponse.json({ applications: applications || [] }, { status: 200 });
   } catch (error: any) {
-    console.error('Fetch applications error:', error);
-    return NextResponse.json({ error: 'Failed to fetch applications' }, { status: 500 });
+    console.error('Fetch applications error:', error.message);
+    return NextResponse.json({ error: 'Failed to fetch tracking data over HTTPS' }, { status: 500 });
   }
 }

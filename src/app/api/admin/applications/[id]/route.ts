@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
-import connectDB from '@/lib/mongodb';
-import JobApplication from '@/models/JobApplication';
-import Notification from '@/models/Notification';
+import { supabase } from '@/lib/supabase';
 
 export const dynamic = 'force-dynamic';
 
@@ -28,39 +26,39 @@ export async function PATCH(
       return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
     }
 
-    await connectDB();
+    // 1. Update application status over HTTPS
+    const { data: application, error: updateError } = await supabase
+      .from('JobApplication')
+      .update({ status })
+      .eq('id', applicationId)
+      .select('*, job:JobListing(role, company:Company(name))')
+      .single();
 
-    // Use findById and populate to get job details for the notification message
-    const application = await JobApplication.findById(applicationId).populate('jobId');
-
-    if (!application) {
-      return NextResponse.json({ error: 'Application not found' }, { status: 404 });
+    if (updateError || !application) {
+      return NextResponse.json({ error: 'Application not found over HTTPS' }, { status: 404 });
     }
 
-    application.status = status;
-    await application.save();
-
-    // Create notification for the student
+    // 2. Create notification for the student via HTTPS SDK
     try {
-      const job = application.jobId as any;
-      await Notification.create({
+      const job = (application as any).job;
+      await supabase.from('Notification').insert({
         userId: application.userId,
         title: 'Application Status Update',
-        message: `Your application status for ${job.companyName} (${job.role}) has been updated to: ${status.toUpperCase()}.`,
+        message: `Your application status for ${job.company?.name} (${job.role}) has been updated to: ${status.toUpperCase()}.`,
         type: 'status_update',
-        relatedId: application._id,
+        link: `/student/applications`,
+        read: false
       });
     } catch (notifError) {
-      console.error('Failed to create notification after status update:', notifError);
-      // We don't fail the entire request if just the notification fails
+      console.error('Failed to create notification over HTTPS:', notifError);
     }
 
     return NextResponse.json({ 
-      message: 'Status updated successfully', 
+      message: 'Status updated over HTTPS successfully', 
       application 
     }, { status: 200 });
   } catch (error: any) {
-    console.error('Update status error:', error);
-    return NextResponse.json({ error: 'Failed to update status' }, { status: 500 });
+    console.error('Update status error:', error.message);
+    return NextResponse.json({ error: 'Failed to update status over HTTPS' }, { status: 500 });
   }
 }
