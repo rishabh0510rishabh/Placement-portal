@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/dialog"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
-import { Building2, MapPin, IndianRupee, Calendar, Search, GraduationCap, Loader2, CheckCircle2, AlertCircle } from "lucide-react"
+import { Building2, MapPin, IndianRupee, Calendar, Search, GraduationCap, Loader2, CheckCircle2, AlertCircle, Briefcase } from "lucide-react"
 import { toast } from "sonner"
 import { JobListing, StudentProfile } from "@/types/database"
 

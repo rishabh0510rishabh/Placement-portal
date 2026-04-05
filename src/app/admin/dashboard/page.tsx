@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Users, Building2, ClipboardList, CheckCircle2, TrendingUp, ArrowRight, Loader2, IndianRupee } from "lucide-react"
 import { toast } from "sonner"
+import { Badge } from "@/components/ui/badge"
 
 export default function AdminDashboard() {
   const [isLoading, setIsLoading] = useState(true)
