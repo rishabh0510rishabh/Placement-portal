@@ -50,23 +50,49 @@ export async function POST(req: NextRequest) {
     // 5. Hash password for Postgres storage
     const hashedPassword = await bcrypt.hash(password, 12);
 
-      const now = new Date().toISOString();
-      const { data: user, error: insertError } = await supabase
-        .from('User')
-        .insert({
-          id: crypto.randomUUID(),
-          name,
-          fullName: name, // Added for consistency with other select calls
-          email: lowerEmail,
-          password: hashedPassword,
-          role: 'student',
-          createdAt: now,
-          updatedAt: now,
-        })
+    const now = new Date().toISOString();
+    const userId = crypto.randomUUID();
+
+    // 6. Create User Entry
+    const { data: user, error: insertError } = await supabase
+      .from('User')
+      .insert({
+        id: userId,
+        name: name,
+        email: lowerEmail,
+        password: hashedPassword,
+        role: 'student',
+        createdAt: now,
+        updatedAt: now,
+      })
       .select()
       .single();
 
     if (insertError) throw insertError;
+
+    // 7. Create corresponding StudentProfile Entry
+    // This ensures the student appears in admin lists and has a profile to fill later
+    const { error: profileError } = await supabase
+      .from('StudentProfile')
+      .insert({
+        id: crypto.randomUUID(),
+        userId: userId,
+        fullName: name,
+        email: lowerEmail,
+        cgpa: 0,
+        activeBacklogs: 0,
+        currentSemester: 1,
+        branch: 'Other', // Default
+        rollNumber: 'NOT_SET',
+        collegeId: 'NOT_SET',
+        phoneNumber: 'NOT_SET'
+      });
+
+    if (profileError) {
+      console.warn('Profile creation warning:', profileError.message);
+      // We don't fail the whole registration if profile creation fails, 
+      // but ideally this shouldn't happen.
+    }
 
     return NextResponse.json(
       {

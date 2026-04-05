@@ -75,21 +75,6 @@ export default function LandingPage() {
           </Button>
         </div>
 
-        {/* Trust Indicators */}
-        <div className="pt-10 flex flex-wrap justify-center gap-x-12 gap-y-6 opacity-40 grayscale hover:grayscale-0 transition-all duration-500">
-          <div className="flex flex-col items-center">
-            <span className="text-2xl font-bold text-white">45+</span>
-            <span className="text-xs text-gray-400 font-medium tracking-widest uppercase">Companies</span>
-          </div>
-          <div className="flex flex-col items-center border-x border-white/10 px-12">
-            <span className="text-2xl font-bold text-white">500+</span>
-            <span className="text-xs text-gray-400 font-medium tracking-widest uppercase">Offers</span>
-          </div>
-          <div className="flex flex-col items-center">
-            <span className="text-2xl font-bold text-white">12 LPA</span>
-            <span className="text-xs text-gray-400 font-medium tracking-widest uppercase">Avg Package</span>
-          </div>
-        </div>
       </div>
 
       {/* Footer Branding */}
