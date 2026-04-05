@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, Suspense } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
@@ -9,10 +9,10 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Eye, EyeOff, Loader2, IndianRupee, ShieldCheck } from "lucide-react"
+import { Eye, EyeOff, Loader2, ShieldCheck } from "lucide-react"
 import { toast } from "sonner"
 
-export default function SignInPage() {
+function SignInForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const callbackUrl = searchParams.get("callbackUrl") || "/"
@@ -70,7 +70,7 @@ export default function SignInPage() {
           </Link>
         </div>
 
-        <Card className="border-white/5 bg-white/[0.04] backdrop-blur-2xl shadow-[0_25px_80px_rgba(0,0,0,0.5)] overflow-hidden">
+        <Card className="border-white/5 bg-white/[0.04] backdrop-blur-2xl shadow-[0_25px_80_rgba(0,0,0,0.5)] overflow-hidden">
           <CardHeader className="text-center pt-10 pb-4">
             <div className="mx-auto h-12 w-12 bg-[#22c55e]/10 rounded-2xl flex items-center justify-center mb-4 border border-[#22c55e]/20">
                <ShieldCheck className="h-6 w-6 text-[#22c55e]" />
@@ -172,5 +172,17 @@ export default function SignInPage() {
         </Card>
       </div>
     </div>
+  )
+}
+
+export default function SignInPage() {
+  return (
+    <Suspense fallback={
+       <div className="min-h-screen flex items-center justify-center bg-[#0a0a0a]">
+          <Loader2 className="h-10 w-10 animate-spin text-[#22c55e]" />
+       </div>
+    }>
+      <SignInForm />
+    </Suspense>
   )
 }

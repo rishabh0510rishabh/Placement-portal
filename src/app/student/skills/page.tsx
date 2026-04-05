@@ -9,6 +9,7 @@ import { Code, Plus, X, Save, Loader2 } from "lucide-react"
 
 type SkillCategory = {
   name: string
+  key: string
   skills: string[]
 }
 
@@ -23,7 +24,7 @@ const defaultCategories: SkillCategory[] = [
 export default function SkillsPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [categories, setCategories] = useState<any[]>(defaultCategories)
+  const [categories, setCategories] = useState<SkillCategory[]>(defaultCategories)
   const [newSkill, setNewSkill] = useState<Record<string, string>>({})
 
   // Load skills from Supabase
@@ -66,7 +67,7 @@ export default function SkillsPage() {
     setCategories(
       categories.map((cat) =>
         cat.name === categoryName
-          ? { ...cat, skills: cat.skills.filter((s) => s !== skillToRemove) }
+          ? { ...cat, skills: cat.skills.filter((s: string) => s !== skillToRemove) }
           : cat
       )
     )
