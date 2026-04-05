@@ -3,6 +3,7 @@
 import Link from "next/link"
 import Image from "next/image"
 import { usePathname } from "next/navigation"
+import { signOut } from "next-auth/react"
 import { cn } from "@/lib/utils"
 import {
   LayoutDashboard,
@@ -113,14 +114,12 @@ export function AdminSidebar() {
           {/* Logout */}
           <div className="p-3 border-t border-sidebar-border">
             <Button
-              asChild
               variant="ghost"
               className="w-full justify-start text-muted-foreground hover:text-destructive"
+              onClick={() => signOut({ callbackUrl: "/" })}
             >
-              <Link href="/">
-                <LogOut className="h-5 w-5 mr-3" />
-                Logout
-              </Link>
+              <LogOut className="h-5 w-5 mr-3" />
+              Logout
             </Button>
           </div>
         </div>
