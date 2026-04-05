@@ -50,15 +50,19 @@ export async function POST(req: NextRequest) {
     // 5. Hash password for Postgres storage
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    // 6. Create new student user via HTTPS SDK
-    const { data: user, error: insertError } = await supabase
-      .from('User')
-      .insert({
-        name,
-        email: lowerEmail,
-        password: hashedPassword,
-        role: 'student',
-      })
+      const now = new Date().toISOString();
+      const { data: user, error: insertError } = await supabase
+        .from('User')
+        .insert({
+          id: crypto.randomUUID(),
+          name,
+          fullName: name, // Added for consistency with other select calls
+          email: lowerEmail,
+          password: hashedPassword,
+          role: 'student',
+          createdAt: now,
+          updatedAt: now,
+        })
       .select()
       .single();
 

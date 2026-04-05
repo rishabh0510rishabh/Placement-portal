@@ -97,6 +97,7 @@ export async function POST(req: NextRequest) {
 
       if (students && students.length > 0) {
         const notifications = students.map((student) => ({
+          id: crypto.randomUUID(),
           userId: student.id,
           title: 'New Job Posting!',
           message: `${newJob.company.name} is hiring for ${newJob.role}! Check eligibility and apply now.`,

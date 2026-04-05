@@ -42,6 +42,7 @@ export async function PATCH(
     try {
       const job = (application as any).job;
       await supabase.from('Notification').insert({
+        id: crypto.randomUUID(),
         userId: application.userId,
         title: 'Application Status Update',
         message: `Your application status for ${job.company?.name} (${job.role}) has been updated to: ${status.toUpperCase()}.`,
