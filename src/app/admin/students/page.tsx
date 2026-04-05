@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -21,271 +21,214 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { Users, Search, Eye, Mail, Phone } from "lucide-react"
-
-type Student = {
-  id: string
-  name: string
-  email: string
-  phone: string
-  rollNumber: string
-  branch: string
-  cgpa: number
-  skills: string[]
-  applications: number
-  status: "active" | "placed"
-}
-
-const mockStudents: Student[] = [
-  {
-    id: "1",
-    name: "Rahul Kumar",
-    email: "rahul.kumar@rkgit.edu.in",
-    phone: "+91 98765 43210",
-    rollNumber: "2100910100001",
-    branch: "CSE",
-    cgpa: 8.5,
-    skills: ["React", "Node.js", "Python"],
-    applications: 5,
-    status: "active",
-  },
-  {
-    id: "2",
-    name: "Priya Singh",
-    email: "priya.singh@rkgit.edu.in",
-    phone: "+91 98765 43211",
-    rollNumber: "2100910100002",
-    branch: "IT",
-    cgpa: 9.0,
-    skills: ["Java", "Spring Boot", "AWS"],
-    applications: 3,
-    status: "placed",
-  },
-  {
-    id: "3",
-    name: "Amit Sharma",
-    email: "amit.sharma@rkgit.edu.in",
-    phone: "+91 98765 43212",
-    rollNumber: "2100910100003",
-    branch: "CSE",
-    cgpa: 7.8,
-    skills: ["JavaScript", "MongoDB", "Express"],
-    applications: 4,
-    status: "active",
-  },
-  {
-    id: "4",
-    name: "Sneha Gupta",
-    email: "sneha.gupta@rkgit.edu.in",
-    phone: "+91 98765 43213",
-    rollNumber: "2100910100004",
-    branch: "ECE",
-    cgpa: 8.2,
-    skills: ["VLSI", "Embedded Systems", "C++"],
-    applications: 2,
-    status: "active",
-  },
-  {
-    id: "5",
-    name: "Vikram Patel",
-    email: "vikram.patel@rkgit.edu.in",
-    phone: "+91 98765 43214",
-    rollNumber: "2100910100005",
-    branch: "CSE",
-    cgpa: 8.8,
-    skills: ["Python", "Machine Learning", "TensorFlow"],
-    applications: 6,
-    status: "placed",
-  },
-]
-
-const branches = ["All", "CSE", "IT", "ECE", "EE", "ME", "CE"]
+import { Users, Search, Eye, Mail, Phone, Loader2, GraduationCap, Link2 } from "lucide-react"
+import { toast } from "sonner"
+import { StudentProfile } from "@/types/database"
 
 export default function StudentsPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [branchFilter, setBranchFilter] = useState("All")
-  const [cgpaFilter, setCgpaFilter] = useState("all")
-  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [students, setStudents] = useState<StudentProfile[]>([])
+  const [selectedStudent, setSelectedStudent] = useState<StudentProfile | null>(null)
 
-  const filteredStudents = mockStudents.filter((student) => {
+  useEffect(() => {
+    fetchStudents()
+  }, [])
+
+  const fetchStudents = async () => {
+    setIsLoading(true)
+    try {
+      const res = await fetch("/api/admin/students")
+      const result = await res.json()
+      if (res.ok) {
+        setStudents(result.students)
+      } else {
+        toast.error(result.error || "Failed to fetch candidate directory")
+      }
+    } catch (err) {
+      toast.error("Telemetry link failed")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const filteredStudents = students.filter((student) => {
     const matchesSearch =
-      student.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      student.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       student.rollNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
       student.email.toLowerCase().includes(searchQuery.toLowerCase())
     const matchesBranch = branchFilter === "All" || student.branch === branchFilter
-    const matchesCgpa =
-      cgpaFilter === "all" ||
-      (cgpaFilter === "9+" && student.cgpa >= 9) ||
-      (cgpaFilter === "8-9" && student.cgpa >= 8 && student.cgpa < 9) ||
-      (cgpaFilter === "7-8" && student.cgpa >= 7 && student.cgpa < 8) ||
-      (cgpaFilter === "6-7" && student.cgpa >= 6 && student.cgpa < 7)
-    return matchesSearch && matchesBranch && matchesCgpa
+    return matchesSearch && matchesBranch
   })
 
+  const uniqueBranches = Array.from(new Set(students.map(s => s.branch)))
+
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-semibold text-foreground">Students</h1>
-        <p className="text-muted-foreground mt-1">Manage registered students</p>
+    <div className="space-y-6 w-full pb-10">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold text-foreground">Candidate Directory</h1>
+          <p className="text-muted-foreground mt-1 text-sm italic">Manage high-precision student data and academic records</p>
+        </div>
+        <div className="flex items-center gap-3">
+           <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+           <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest bg-white/5 px-2 py-1.5 rounded-full border border-white/10">Directory Live</span>
+        </div>
       </div>
 
-      {/* Filters */}
       <Card className="bg-card border-border">
         <CardContent className="p-4">
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search by name, roll number, or email..."
-                className="pl-10"
+                placeholder="Search candidates by name, identity, or email..."
+                className="pl-10 h-11 bg-white/5 border-white/10 rounded-xl"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
             <Select value={branchFilter} onValueChange={setBranchFilter}>
-              <SelectTrigger className="w-full sm:w-40">
-                <SelectValue placeholder="Branch" />
+              <SelectTrigger className="w-full sm:w-48 h-11 rounded-xl">
+                 <SelectValue placeholder="All Branches" />
               </SelectTrigger>
               <SelectContent>
-                {branches.map((branch) => (
-                  <SelectItem key={branch} value={branch}>
-                    {branch === "All" ? "All Branches" : branch}
-                  </SelectItem>
+                <SelectItem value="All">All Disciplines</SelectItem>
+                {uniqueBranches.map(b => (
+                  <SelectItem key={b} value={b}>{b}</SelectItem>
                 ))}
-              </SelectContent>
-            </Select>
-            <Select value={cgpaFilter} onValueChange={setCgpaFilter}>
-              <SelectTrigger className="w-full sm:w-40">
-                <SelectValue placeholder="CGPA" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All CGPA</SelectItem>
-                <SelectItem value="9+">9.0 and above</SelectItem>
-                <SelectItem value="8-9">8.0 - 9.0</SelectItem>
-                <SelectItem value="7-8">7.0 - 8.0</SelectItem>
-                <SelectItem value="6-7">6.0 - 7.0</SelectItem>
               </SelectContent>
             </Select>
           </div>
         </CardContent>
       </Card>
 
-      {/* Students Table */}
-      <Card className="bg-card border-border">
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Roll Number</TableHead>
-                <TableHead>Branch</TableHead>
-                <TableHead>CGPA</TableHead>
-                <TableHead>Applications</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Action</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredStudents.map((student) => (
-                <TableRow key={student.id}>
-                  <TableCell className="font-medium">{student.name}</TableCell>
-                  <TableCell>{student.rollNumber}</TableCell>
-                  <TableCell>{student.branch}</TableCell>
-                  <TableCell>{student.cgpa.toFixed(1)}</TableCell>
-                  <TableCell>{student.applications}</TableCell>
-                  <TableCell>
-                    <Badge
-                      className={
-                        student.status === "placed"
-                          ? "bg-success/10 text-success"
-                          : "bg-primary/10 text-primary"
-                      }
-                    >
-                      {student.status === "placed" ? "Placed" : "Active"}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setSelectedStudent(student)}
-                    >
-                      <Eye className="h-4 w-4 mr-1" />
-                      View
-                    </Button>
-                  </TableCell>
+      <Card className="bg-card border-border overflow-hidden">
+        <CardContent className="p-0 overflow-x-auto">
+          {isLoading ? (
+            <div className="flex items-center justify-center p-20">
+               <Loader2 className="h-10 w-10 animate-spin text-primary" />
+            </div>
+          ) : (
+            <Table>
+              <TableHeader className="bg-white/[0.01]">
+                <TableRow className="hover:bg-transparent border-white/5">
+                  <TableHead className="py-6 font-black uppercase text-[10px] tracking-widest text-gray-500">Applicant</TableHead>
+                  <TableHead className="py-6 font-black uppercase text-[10px] tracking-widest text-gray-500">Roll/Identity</TableHead>
+                  <TableHead className="py-6 font-black uppercase text-[10px] tracking-widest text-gray-500 text-center">Academic Track</TableHead>
+                  <TableHead className="py-6 font-black uppercase text-[10px] tracking-widest text-gray-500 text-right">C.G.P.A</TableHead>
+                  <TableHead className="py-6 font-black uppercase text-[10px] tracking-widest text-gray-500 text-right px-6">Terminal</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-          {filteredStudents.length === 0 && (
-            <div className="flex flex-col items-center justify-center py-12">
-              <Users className="h-12 w-12 text-muted-foreground mb-4" />
-              <p className="text-muted-foreground">No students found</p>
+              </TableHeader>
+              <TableBody>
+                {filteredStudents.map((student) => (
+                  <TableRow key={student.id} className="hover:bg-white/[0.02] transition-colors border-white/5">
+                    <TableCell className="py-5">
+                       <div className="flex items-center gap-3">
+                         <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-black border border-primary/20">
+                           {student.fullName.charAt(0)}
+                         </div>
+                         <div>
+                            <span className="font-bold text-white tracking-tight">{student.fullName}</span>
+                            <p className="text-[10px] text-gray-500 tracking-tight lowercase">{student.email}</p>
+                         </div>
+                       </div>
+                    </TableCell>
+                    <TableCell className="py-5 font-bold text-gray-400">{student.rollNumber}</TableCell>
+                    <TableCell className="py-5 text-center px-4">
+                       <Badge variant="outline" className="text-[9px] uppercase tracking-widest font-black border-white/10 bg-white/5">
+                         {student.branch} | Sem {student.currentSemester} 
+                       </Badge>
+                    </TableCell>
+                    <TableCell className="py-5 text-right font-black text-emerald-500">{student.cgpa?.toFixed(2)}</TableCell>
+                    <TableCell className="text-right py-5 px-6">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="rounded-xl h-9 hover:bg-white/5 border border-transparent hover:border-white/10 text-xs font-bold"
+                        onClick={() => setSelectedStudent(student)}
+                      >
+                        <Eye className="h-3 w-3 mr-2" /> View Dossier
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+          {!isLoading && filteredStudents.length === 0 && (
+            <div className="flex flex-col items-center justify-center py-20 grayscale opacity-40">
+              <Users className="h-16 w-16 text-muted-foreground mb-4" />
+              <p className="text-muted-foreground font-black uppercase tracking-[0.3em] text-xs">No Candidate Records</p>
             </div>
           )}
         </CardContent>
       </Card>
 
-      {/* Student Detail Dialog */}
+      {/* Student Profile Dialog */}
       <Dialog open={!!selectedStudent} onOpenChange={(open) => !open && setSelectedStudent(null)}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>Student Profile</DialogTitle>
-            <DialogDescription>View student details and information.</DialogDescription>
+            <DialogTitle className="text-xl font-bold tracking-tight">Candidate Profile Dossier</DialogTitle>
+            <DialogDescription>Verified institutional records for {selectedStudent?.fullName}</DialogDescription>
           </DialogHeader>
           {selectedStudent && (
-            <div className="space-y-6">
-              <div className="flex items-center gap-4">
-                <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
-                  <span className="text-2xl font-semibold text-primary">
-                    {selectedStudent.name.charAt(0)}
-                  </span>
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-foreground">{selectedStudent.name}</h3>
-                  <p className="text-sm text-muted-foreground">{selectedStudent.rollNumber}</p>
-                </div>
+            <div className="space-y-6 pt-4">
+              <div className="p-4 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-between">
+                 <div className="flex items-center gap-4">
+                    <div className="h-16 w-16 rounded-2xl bg-primary flex items-center justify-center text-2xl font-black text-black">
+                       {selectedStudent.fullName.charAt(0)}
+                    </div>
+                    <div>
+                       <h3 className="font-bold text-lg text-white">{selectedStudent.fullName}</h3>
+                       <p className="text-xs text-gray-500 uppercase tracking-widest font-black">{selectedStudent.rollNumber}</p>
+                    </div>
+                 </div>
+                 <Badge className="bg-emerald-500/10 text-emerald-500 border-none font-black text-[9px] uppercase tracking-widest">Active Pool</Badge>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <div className="p-3 rounded-lg bg-secondary/50">
-                  <p className="text-xs text-muted-foreground">Branch</p>
-                  <p className="font-medium text-foreground">{selectedStudent.branch}</p>
-                </div>
-                <div className="p-3 rounded-lg bg-secondary/50">
-                  <p className="text-xs text-muted-foreground">CGPA</p>
-                  <p className="font-medium text-foreground">{selectedStudent.cgpa.toFixed(2)}</p>
-                </div>
+                 <Card className="bg-white/5 border-white/5 col-span-1 p-4 shadow-none">
+                    <p className="text-[10px] font-black uppercase text-gray-500 tracking-widest mb-1">Academic Rank</p>
+                    <p className="text-xl font-black text-white">{selectedStudent.cgpa?.toFixed(2)} CGPA</p>
+                 </Card>
+                 <Card className="bg-white/5 border-white/5 col-span-1 p-4 shadow-none">
+                    <p className="text-[10px] font-black uppercase text-gray-500 tracking-widest mb-1">Obstacles</p>
+                    <p className={`text-xl font-black ${selectedStudent.activeBacklogs > 0 ? 'text-red-500' : 'text-emerald-500'}`}>
+                       {selectedStudent.activeBacklogs} Backlogs
+                    </p>
+                 </Card>
               </div>
 
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 text-sm">
-                  <Mail className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-foreground">{selectedStudent.email}</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <Phone className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-foreground">{selectedStudent.phone}</span>
-                </div>
+              <div className="space-y-3 p-4 rounded-2xl bg-white/[0.02] border border-white/5">
+                 <div className="flex items-center gap-3 text-sm">
+                    <Mail className="h-4 w-4 text-gray-500" />
+                    <span className="text-gray-300 font-medium">{selectedStudent.email}</span>
+                 </div>
+                 <div className="flex items-center gap-3 text-sm">
+                    <Phone className="h-4 w-4 text-gray-500" />
+                    <span className="text-gray-300 font-medium">{selectedStudent.phoneNumber}</span>
+                 </div>
+                 <div className="flex items-center gap-3 text-sm pt-2 border-t border-white/5">
+                    <GraduationCap className="h-4 w-4 text-gray-500" />
+                    <span className="text-gray-300 font-medium">{selectedStudent.branch} | Semester {selectedStudent.currentSemester}</span>
+                 </div>
               </div>
 
-              <div>
-                <p className="text-sm text-muted-foreground mb-2">Skills</p>
-                <div className="flex flex-wrap gap-2">
-                  {selectedStudent.skills.map((skill) => (
-                    <Badge key={skill} variant="secondary">
-                      {skill}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
+              {selectedStudent.resumeUrl && (
+                <a 
+                  href={selectedStudent.resumeUrl} 
+                  target="_blank" 
+                  rel="noreferrer"
+                  className="flex items-center justify-center gap-2 w-full p-4 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-blue-400 font-black text-sm uppercase tracking-widest hover:bg-blue-500/20 transition-all"
+                >
+                   <Link2 className="h-4 w-4" /> Download Resume Payload
+                </a>
+              )}
 
-              <div className="flex justify-end">
-                <Button variant="outline" onClick={() => setSelectedStudent(null)}>
-                  Close
-                </Button>
+              <div className="flex justify-end pt-4">
+                <Button variant="ghost" onClick={() => setSelectedStudent(null)} className="rounded-xl px-10 text-xs font-black uppercase tracking-widest">Close Dossier</Button>
               </div>
             </div>
           )}

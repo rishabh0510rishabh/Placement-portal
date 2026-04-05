@@ -59,15 +59,29 @@ export async function POST(req: NextRequest) {
     }
 
     // Map branches to enum safely
-    const safeBranches: Branch[] = (body.allowedBranches as string[]).map(b => b.replace('-', '_') as Branch);
+    // 1. Try exact match, 2. Try hyphenated (common in Supabase enums), 3. Catch invalid values
+    const safeBranches: string[] = (body.allowedBranches as string[]).map(b => b.replace('_', '-'));
 
     // 1. Create the job listing over HTTPS
+    const now = new Date().toISOString();
     const { data: newJob, error: jobError } = await supabase
       .from('JobListing')
       .insert({
-        ...body,
+        id: crypto.randomUUID(),
+        companyId: body.companyId,
+        role: body.role,
+        category: body.category || 'Full Time',
+        description: body.description,
+        minimumCgpa: body.minimumCgpa,
+        maximumBacklogs: body.maximumBacklogs,
+        salaryCtc: body.salaryCtc,
+        location: body.location,
+        status: 'active',
         allowedBranches: safeBranches,
         deadline: new Date(body.deadline).toISOString(),
+        requiredSkills: body.requiredSkills || [],
+        createdAt: now,
+        updatedAt: now,
       })
       .select('*, company:Company(*)')
       .single();

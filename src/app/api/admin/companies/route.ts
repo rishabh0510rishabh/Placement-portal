@@ -5,61 +5,59 @@ import { supabase } from '@/lib/supabase';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET(req: NextRequest) {
+// GET /api/admin/companies - Fetch all companies
+export async function GET() {
   const session = await getServerSession(authOptions);
-  
   if (!session?.user || (session.user as any).role !== 'admin') {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   try {
-    // Fetch all companies via HTTPS
     const { data: companies, error } = await supabase
       .from('Company')
       .select('*')
       .order('name', { ascending: true });
 
     if (error) throw error;
-
-    return NextResponse.json({ companies: companies || [] }, { status: 200 });
+    return NextResponse.json({ companies }, { status: 200 });
   } catch (error: any) {
-    console.error('Fetch admin companies error:', error.message);
-    return NextResponse.json({ error: 'Failed to fetch company data over HTTPS' }, { status: 500 });
+    console.error('Fetch companies error:', error.message);
+    return NextResponse.json({ error: 'Failed to fetch companies' }, { status: 500 });
   }
 }
 
+// POST /api/admin/companies - Create a new company
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
-
   if (!session?.user || (session.user as any).role !== 'admin') {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   try {
     const body = await req.json();
-    
-    // Create new company via HTTPS
-    const { data: company, error } = await supabase
+    const { name, industry, website, description } = body;
+
+    if (!name || !industry) {
+      return NextResponse.json({ error: 'Name and Industry are required' }, { status: 400 });
+    }
+
+    const { data: newCompany, error } = await supabase
       .from('Company')
       .insert({
-        name: body.name,
-        industry: body.industry,
-        website: body.website,
-        logo: body.logo,
-        description: body.description,
-        status: body.status || 'active'
+        name,
+        industry,
+        website,
+        description,
+        status: 'active'
       })
       .select()
       .single();
 
     if (error) throw error;
 
-    return NextResponse.json({ company }, { status: 201 });
+    return NextResponse.json({ message: 'Company created successfully', company: newCompany }, { status: 201 });
   } catch (error: any) {
     console.error('Create company error:', error.message);
-    if (error.code === '23505') { // Postgres duplicate key error
-      return NextResponse.json({ error: 'Company with this name already exists' }, { status: 400 });
-    }
-    return NextResponse.json({ error: 'Failed to create company over HTTPS' }, { status: 500 });
+    return NextResponse.json({ error: error.message || 'Failed to create company' }, { status: 500 });
   }
 }

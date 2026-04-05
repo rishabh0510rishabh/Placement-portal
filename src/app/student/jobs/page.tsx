@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -15,136 +15,112 @@ import {
 } from "@/components/ui/dialog"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
-import { Building2, MapPin, IndianRupee, Calendar, Search, GraduationCap, AlertCircle } from "lucide-react"
-
-type Job = {
-  id: string
-  company: string
-  role: string
-  description: string
-  minCgpa: number
-  branches: string[]
-  maxBacklogs: number
-  ctc: string
-  location: string
-  deadline: string
-}
-
-const mockJobs: Job[] = [
-  {
-    id: "1",
-    company: "Tata Consultancy Services",
-    role: "Software Developer",
-    description: "Join TCS as a Software Developer and work on cutting-edge technologies. You will be part of a dynamic team building enterprise solutions.",
-    minCgpa: 6.5,
-    branches: ["CSE", "IT", "ECE"],
-    maxBacklogs: 0,
-    ctc: "4.5 LPA",
-    location: "Noida",
-    deadline: "Apr 15, 2026",
-  },
-  {
-    id: "2",
-    company: "Infosys",
-    role: "System Engineer",
-    description: "As a System Engineer at Infosys, you will be responsible for developing and maintaining software applications for global clients.",
-    minCgpa: 6.0,
-    branches: ["CSE", "IT", "ECE", "EE"],
-    maxBacklogs: 1,
-    ctc: "3.8 LPA",
-    location: "Bangalore",
-    deadline: "Apr 20, 2026",
-  },
-  {
-    id: "3",
-    company: "Wipro",
-    role: "Project Engineer",
-    description: "Work on diverse projects across various domains. Opportunity to grow and learn in a supportive environment.",
-    minCgpa: 6.0,
-    branches: ["CSE", "IT"],
-    maxBacklogs: 0,
-    ctc: "4.0 LPA",
-    location: "Hyderabad",
-    deadline: "Apr 25, 2026",
-  },
-  {
-    id: "4",
-    company: "HCL Technologies",
-    role: "Graduate Engineer Trainee",
-    description: "Join HCL as a GET and kickstart your career with one of India's leading IT companies.",
-    minCgpa: 7.0,
-    branches: ["CSE", "IT", "ECE", "ME"],
-    maxBacklogs: 0,
-    ctc: "4.25 LPA",
-    location: "Chennai",
-    deadline: "Apr 30, 2026",
-  },
-  {
-    id: "5",
-    company: "Cognizant",
-    role: "Programmer Analyst",
-    description: "Work on innovative projects and help clients transform their business through technology.",
-    minCgpa: 6.5,
-    branches: ["CSE", "IT"],
-    maxBacklogs: 1,
-    ctc: "4.0 LPA",
-    location: "Pune",
-    deadline: "May 5, 2026",
-  },
-]
-
-// Mock student data
-const studentData = {
-  cgpa: 7.5,
-  branch: "CSE",
-  backlogs: 0,
-  resumes: [
-    { id: "1", name: "Software Developer Resume" },
-    { id: "2", name: "General Resume" },
-  ],
-}
+import { Building2, MapPin, IndianRupee, Calendar, Search, GraduationCap, Loader2, CheckCircle2, AlertCircle } from "lucide-react"
+import { toast } from "sonner"
+import { JobListing, StudentProfile } from "@/types/database"
 
 export default function JobsPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [roleFilter, setRoleFilter] = useState("all")
   const [locationFilter, setLocationFilter] = useState("all")
-  const [selectedJob, setSelectedJob] = useState<Job | null>(null)
-  const [selectedResume, setSelectedResume] = useState(studentData.resumes[0]?.id || "")
+  const [isLoading, setIsLoading] = useState(true)
+  const [isApplying, setIsApplying] = useState(false)
+  const [jobs, setJobs] = useState<JobListing[]>([])
+  const [profile, setProfile] = useState<StudentProfile | null>(null)
   const [appliedJobs, setAppliedJobs] = useState<string[]>([])
+  const [selectedJob, setSelectedJob] = useState<JobListing | null>(null)
 
-  const isEligible = (job: Job) => {
+  useEffect(() => {
+    fetchData()
+  }, [])
+
+  const fetchData = async () => {
+    setIsLoading(true)
+    try {
+      const [jobsRes, profileRes, appsRes] = await Promise.all([
+        fetch("/api/jobs"),
+        fetch("/api/profile"),
+        fetch("/api/applications")
+      ])
+      
+      const [jobsData, profileData, appsData] = await Promise.all([
+        jobsRes.json(),
+        profileRes.json(),
+        appsRes.json()
+      ])
+
+      if (jobsRes.ok) setJobs(jobsData.jobs)
+      if (profileRes.ok) setProfile(profileData.profile)
+      if (appsRes.ok) {
+        const appliedIds = appsData.applications.map((app: any) => app.jobId)
+        setAppliedJobs(appliedIds)
+      }
+    } catch (err) {
+      toast.error("Failed to sync recruitment stream")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const isEligible = (job: JobListing) => {
+    if (!profile) return false
     return (
-      studentData.cgpa >= job.minCgpa &&
-      job.branches.includes(studentData.branch) &&
-      studentData.backlogs <= job.maxBacklogs
+      profile.cgpa >= job.minimumCgpa &&
+      job.allowedBranches.includes(profile.branch) &&
+      profile.activeBacklogs <= job.maximumBacklogs
     )
   }
 
-  const filteredJobs = mockJobs.filter((job) => {
+  const handleApply = async () => {
+    if (!selectedJob || !profile?.resumeUrl) {
+      toast.error("Valid resume profile required for submission")
+      return
+    }
+
+    setIsApplying(true)
+    try {
+      const res = await fetch("/api/applications", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          jobId: selectedJob.id,
+          resumeUrl: profile.resumeUrl
+        })
+      })
+
+      const data = await res.json()
+
+      if (res.ok) {
+        toast.success(`Application for ${selectedJob.role} submitted!`)
+        setAppliedJobs([...appliedJobs, selectedJob.id])
+        setSelectedJob(null)
+      } else {
+        toast.error(data.error || "Submission failed")
+      }
+    } catch (err) {
+      toast.error("Terminal networking error")
+    } finally {
+      setIsApplying(false)
+    }
+  }
+
+  const filteredJobs = jobs.filter((job) => {
     const matchesSearch =
-      job.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      job.company?.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       job.role.toLowerCase().includes(searchQuery.toLowerCase())
     const matchesRole = roleFilter === "all" || job.role === roleFilter
     const matchesLocation = locationFilter === "all" || job.location === locationFilter
     return matchesSearch && matchesRole && matchesLocation
   })
 
-  const uniqueRoles = [...new Set(mockJobs.map((job) => job.role))]
-  const uniqueLocations = [...new Set(mockJobs.map((job) => job.location))]
-
-  const handleApply = () => {
-    if (selectedJob && selectedResume) {
-      setAppliedJobs([...appliedJobs, selectedJob.id])
-      setSelectedJob(null)
-    }
-  }
+  const uniqueRoles = Array.from(new Set(jobs.map((job) => job.role)))
+  const uniqueLocations = Array.from(new Set(jobs.map((job) => job.location)))
 
   return (
     <div className="space-y-6 w-full pb-10">
-      {/* Header */}
       <div>
-        <h1 className="text-2xl font-semibold text-foreground">Job Listings</h1>
-        <p className="text-muted-foreground mt-1">Browse and apply for available positions</p>
+        <h1 className="text-2xl font-semibold text-foreground">Discovery Engine</h1>
+        <p className="text-muted-foreground mt-1 text-sm italic">Audit and engage with live recruitment pipelines</p>
       </div>
 
       {/* Filters */}
@@ -154,35 +130,20 @@ export default function JobsPage() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search by company or role..."
-                className="pl-10"
+                placeholder="Search organizations or roles..."
+                className="pl-10 h-11 bg-white/5 border-white/10 rounded-xl"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
             <Select value={roleFilter} onValueChange={setRoleFilter}>
-              <SelectTrigger className="w-full sm:w-48">
-                <SelectValue placeholder="Filter by role" />
+              <SelectTrigger className="w-full sm:w-48 h-11 rounded-xl">
+                <SelectValue placeholder="All Categories" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Roles</SelectItem>
                 {uniqueRoles.map((role) => (
-                  <SelectItem key={role} value={role}>
-                    {role}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={locationFilter} onValueChange={setLocationFilter}>
-              <SelectTrigger className="w-full sm:w-48">
-                <SelectValue placeholder="Filter by location" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Locations</SelectItem>
-                {uniqueLocations.map((location) => (
-                  <SelectItem key={location} value={location}>
-                    {location}
-                  </SelectItem>
+                  <SelectItem key={role} value={role}>{role}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -190,124 +151,118 @@ export default function JobsPage() {
         </CardContent>
       </Card>
 
-      {/* Job Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {filteredJobs.map((job) => {
-          const eligible = isEligible(job)
-          const hasApplied = appliedJobs.includes(job.id)
+      {/* Grid */}
+      {isLoading ? (
+        <div className="flex items-center justify-center p-20">
+           <Loader2 className="h-10 w-10 animate-spin text-primary" />
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredJobs.map((job) => {
+            const eligible = isEligible(job)
+            const hasApplied = appliedJobs.includes(job.id)
 
-          return (
-            <Card key={job.id} className="bg-card border-border">
-              <CardHeader>
-                <div className="flex items-start justify-between gap-4">
+            return (
+              <Card key={job.id} className="bg-card border-border hover:border-primary/20 transition-all group relative overflow-hidden">
+                <div className={`absolute top-0 right-0 p-1 px-3 text-[10px] font-black uppercase tracking-tighter ${eligible ? 'bg-emerald-500/10 text-emerald-500' : 'bg-destructive/10 text-destructive'}`}>
+                   {eligible ? 'Compatible' : 'Gate Closed'}
+                </div>
+                <CardHeader className="pb-4">
                   <div className="flex items-center gap-3">
-                    <div className="p-3 rounded-lg bg-secondary shrink-0">
-                      <Building2 className="h-6 w-6 text-primary" />
+                    <div className="h-12 w-12 rounded-2xl bg-secondary flex items-center justify-center text-primary font-black border border-white/5 transition-transform group-hover:scale-110">
+                      {job.company?.name.charAt(0)}
                     </div>
                     <div>
-                      <CardTitle className="text-lg">{job.company}</CardTitle>
-                      <p className="text-sm text-primary">{job.role}</p>
+                      <CardTitle className="text-base font-bold tracking-tight">{job.company?.name}</CardTitle>
+                      <p className="text-xs text-primary font-bold uppercase tracking-widest">{job.role}</p>
                     </div>
                   </div>
-                  <Badge variant={eligible ? "default" : "secondary"}>
-                    {eligible ? "Eligible" : "Not Eligible"}
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <p className="text-sm text-muted-foreground line-clamp-2">{job.description}</p>
+                </CardHeader>
+                <CardContent className="space-y-5">
+                  <p className="text-xs text-muted-foreground line-clamp-3 leading-relaxed">{job.description}</p>
 
-                <div className="grid grid-cols-2 gap-3 text-sm">
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <IndianRupee className="h-4 w-4" />
-                    {job.ctc}
+                  <div className="grid grid-cols-2 gap-y-3 gap-x-2 text-[11px] font-medium text-gray-400">
+                    <div className="flex items-center gap-2">
+                       <IndianRupee className="h-3 w-3 text-[#22c55e]" /> {job.salaryCtc}
+                    </div>
+                    <div className="flex items-center gap-2">
+                       <MapPin className="h-3 w-3 text-blue-500" /> {job.location}
+                    </div>
+                    <div className="flex items-center gap-2">
+                       <GraduationCap className="h-3 w-3 text-amber-500" /> CGPA ≥ {job.minimumCgpa}
+                    </div>
+                    <div className="flex items-center gap-2">
+                       <Calendar className="h-3 w-3 text-primary" /> Exp: {new Date(job.deadline).toLocaleDateString()}
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <MapPin className="h-4 w-4" />
-                    {job.location}
-                  </div>
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <GraduationCap className="h-4 w-4" />
-                    Min CGPA: {job.minCgpa}
-                  </div>
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <Calendar className="h-4 w-4" />
-                    {job.deadline}
-                  </div>
-                </div>
 
-                <div className="flex flex-wrap gap-1.5">
-                  {job.branches.map((branch) => (
-                    <Badge key={branch} variant="outline" className="text-xs">
-                      {branch}
-                    </Badge>
-                  ))}
-                </div>
+                  {hasApplied ? (
+                    <Button disabled className="w-full rounded-xl h-11 bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
+                      <CheckCircle2 className="h-4 w-4 mr-2" /> Application Verified
+                    </Button>
+                  ) : eligible ? (
+                    <Button 
+                      className="w-full rounded-xl h-11 bg-primary hover:bg-primary/90 shadow-lg shadow-primary/10"
+                      onClick={() => setSelectedJob(job)}
+                    >
+                      Instant Engagement
+                    </Button>
+                  ) : (
+                    <Button variant="outline" disabled className="w-full rounded-xl h-11 border-white/5 bg-transparent">
+                      <AlertCircle className="h-4 w-4 mr-2" /> Academic Mismatch
+                    </Button>
+                  )}
+                </CardContent>
+              </Card>
+            )
+          })}
+        </div>
+      )}
 
-                {hasApplied ? (
-                  <Button disabled className="w-full">
-                    Applied
-                  </Button>
-                ) : eligible ? (
-                  <Button className="w-full" onClick={() => setSelectedJob(job)}>
-                    Apply Now
-                  </Button>
-                ) : (
-                  <Button variant="secondary" disabled className="w-full">
-                    Not Eligible
-                  </Button>
-                )}
-              </CardContent>
-            </Card>
-          )
-        })}
-      </div>
-
-      {filteredJobs.length === 0 && (
-        <Card className="bg-card border-border">
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <Building2 className="h-12 w-12 text-muted-foreground mb-4" />
-            <p className="text-muted-foreground">No jobs found matching your criteria</p>
+      {!isLoading && filteredJobs.length === 0 && (
+        <Card className="bg-card border-border border-dashed">
+          <CardContent className="flex flex-col items-center justify-center py-20 opacity-40">
+            <Briefcase className="h-16 w-16 text-muted-foreground mb-4" />
+            <p className="text-muted-foreground font-black uppercase tracking-[0.3em] text-xs">No Opportunity Detected</p>
           </CardContent>
         </Card>
       )}
 
-      {/* Apply Dialog */}
+      {/* Apply Confirmation */}
       <Dialog open={!!selectedJob} onOpenChange={(open) => !open && setSelectedJob(null)}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Apply for {selectedJob?.role} at {selectedJob?.company}</DialogTitle>
-            <DialogDescription>Select a resume and submit your application.</DialogDescription>
+            <DialogTitle className="text-xl font-bold">Confirm Application</DialogTitle>
+            <DialogDescription>Submit your verified institutional profile and resume.</DialogDescription>
           </DialogHeader>
-          <div className="space-y-6">
-            <div className="p-4 rounded-lg bg-secondary/50">
-              <h4 className="font-medium text-foreground mb-2">Job Details</h4>
-              <div className="space-y-1 text-sm text-muted-foreground">
-                <p>CTC: {selectedJob?.ctc}</p>
-                <p>Location: {selectedJob?.location}</p>
-                <p>Deadline: {selectedJob?.deadline}</p>
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              <Label>Select Resume to Submit</Label>
-              <RadioGroup value={selectedResume} onValueChange={setSelectedResume}>
-                {studentData.resumes.map((resume) => (
-                  <div key={resume.id} className="flex items-center space-x-2">
-                    <RadioGroupItem value={resume.id} id={resume.id} />
-                    <Label htmlFor={resume.id} className="font-normal cursor-pointer">
-                      {resume.name}
-                    </Label>
-                  </div>
-                ))}
-              </RadioGroup>
-            </div>
+          <div className="space-y-6 pt-4">
+            <Card className="bg-white/5 border-white/5">
+              <CardContent className="p-4 space-y-4">
+                <div className="flex items-center justify-between">
+                   <p className="text-[10px] uppercase font-black tracking-widest text-gray-500">Applicant Identity</p>
+                   <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Verified Profile</span>
+                </div>
+                <div>
+                   <p className="font-bold text-white tracking-tight">{profile?.fullName}</p>
+                   <p className="text-xs text-gray-500">{profile?.branch} | {profile?.rollNumber}</p>
+                </div>
+                <div className="pt-4 border-t border-white/5">
+                   <p className="text-[10px] uppercase font-black tracking-widest text-gray-500 mb-2">Resume Payload</p>
+                   <div className="flex items-center gap-2 p-3 rounded-xl bg-white/[0.03] border border-white/5">
+                      <div className="h-8 w-8 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-500">
+                         <Search className="h-4 w-4" />
+                      </div>
+                      <span className="text-xs font-medium text-gray-300 truncate">{profile?.resumeFilename || 'default_resume.pdf'}</span>
+                   </div>
+                </div>
+              </CardContent>
+            </Card>
 
             <div className="flex justify-end gap-3">
-              <Button variant="outline" onClick={() => setSelectedJob(null)}>
-                Cancel
+              <Button variant="ghost" onClick={() => setSelectedJob(null)} className="rounded-xl">Cancel</Button>
+              <Button onClick={handleApply} disabled={isApplying} className="rounded-xl px-10 shadow-lg shadow-primary/20 bg-primary">
+                {isApplying ? <Loader2 className="h-4 w-4 animate-spin" /> : "Authorize Submission"}
               </Button>
-              <Button onClick={handleApply}>Submit Application</Button>
             </div>
           </div>
         </DialogContent>

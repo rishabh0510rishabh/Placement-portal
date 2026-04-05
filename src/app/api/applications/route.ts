@@ -38,15 +38,29 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'This job is no longer accepting applications.' }, { status: 400 });
     }
 
+    // 1. Get student profile ID first
+    const { data: profile } = await supabase
+      .from('StudentProfile')
+      .select('id')
+      .eq('userId', userId)
+      .single();
+
+    if (!profile) {
+      return NextResponse.json({ error: 'Student profile not found. Please complete profile first.' }, { status: 404 });
+    }
+
     // 2. Submit application via HTTPS
+    const now = new Date().toISOString();
     const { data: application, error: insertError } = await supabase
       .from('JobApplication')
       .insert({
+        id: crypto.randomUUID(),
         jobId,
-        userId,
+        studentId: profile.id,
         resumeUrl,
         status: 'applied',
-        appliedAt: new Date().toISOString()
+        appliedAt: now,
+        updatedAt: now,
       })
       .select()
       .single();
@@ -79,7 +93,18 @@ export async function GET(req: NextRequest) {
   const userId = (session.user as any).id;
 
   try {
-    // 3. Fetch applications with relational joins via HTTPS
+    // 1. Get student profile first
+    const { data: profile } = await supabase
+      .from('StudentProfile')
+      .select('id')
+      .eq('userId', userId)
+      .single();
+
+    if (!profile) {
+       return NextResponse.json({ applications: [] }, { status: 200 });
+    }
+
+    // 2. Fetch applications with relational joins via HTTPS
     const { data: applications, error } = await supabase
       .from('JobApplication')
       .select(`
@@ -91,7 +116,7 @@ export async function GET(req: NextRequest) {
           company:Company(name)
         )
       `)
-      .eq('userId', userId)
+      .eq('studentId', profile.id)
       .order('appliedAt', { ascending: false });
 
     if (error) throw error;

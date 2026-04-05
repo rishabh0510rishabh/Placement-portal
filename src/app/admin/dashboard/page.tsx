@@ -1,32 +1,50 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Users, Building2, ClipboardList, CheckCircle2, TrendingUp, ArrowRight } from "lucide-react"
-
-const stats = [
-  { label: "Total Students", value: "1,247", icon: Users, change: "+12%", color: "text-blue-500", bg: "bg-blue-500/10" },
-  { label: "Total Companies", value: "45", icon: Building2, change: "+5%", color: "text-emerald-500", bg: "bg-emerald-500/10" },
-  { label: "Total Applications", value: "3,892", icon: ClipboardList, change: "+23%", color: "text-amber-500", bg: "bg-amber-500/10" },
-  { label: "Shortlisted", value: "856", icon: CheckCircle2, change: "+18%", color: "text-purple-500", bg: "bg-purple-500/10" },
-]
-
-const recentApplications = [
-  { id: 1, student: "Rahul Kumar", company: "TCS", role: "Software Developer", status: "Applied" },
-  { id: 2, student: "Priya Singh", company: "Infosys", role: "System Engineer", status: "Shortlisted" },
-  { id: 3, student: "Amit Sharma", company: "Wipro", role: "Project Engineer", status: "Under Review" },
-  { id: 4, student: "Sneha Gupta", company: "HCL", role: "GET", status: "Selected" },
-  { id: 5, student: "Vikram Patel", company: "Cognizant", role: "Programmer Analyst", status: "Applied" },
-]
-
-const topCompanies = [
-  { name: "TCS", applications: 245, shortlisted: 45 },
-  { name: "Infosys", applications: 198, shortlisted: 38 },
-  { name: "Wipro", applications: 156, shortlisted: 28 },
-  { name: "HCL", applications: 134, shortlisted: 22 },
-  { name: "Cognizant", applications: 112, shortlisted: 19 },
-]
+import { Users, Building2, ClipboardList, CheckCircle2, TrendingUp, ArrowRight, Loader2, IndianRupee } from "lucide-react"
+import { toast } from "sonner"
 
 export default function AdminDashboard() {
+  const [isLoading, setIsLoading] = useState(true)
+  const [data, setData] = useState<any>(null)
+
+  useEffect(() => {
+    fetchMetrics()
+  }, [])
+
+  const fetchMetrics = async () => {
+    setIsLoading(true)
+    try {
+      const res = await fetch("/api/admin/metrics")
+      const result = await res.json()
+      if (res.ok) {
+        setData(result)
+      } else {
+        toast.error(result.error || "Failed to fetch metrics")
+      }
+    } catch (err) {
+      toast.error("Telemetry link failed")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+         <Loader2 className="h-10 w-10 animate-spin text-primary" />
+      </div>
+    )
+  }
+
+  const stats = [
+    { label: "Total Students", value: data?.stats?.totalStudents || 0, icon: Users, color: "text-blue-500", bg: "bg-blue-500/10" },
+    { label: "Active Companies", value: data?.stats?.totalCompanies || 0, icon: Building2, color: "text-emerald-500", bg: "bg-emerald-500/10" },
+    { label: "Job Postings", value: data?.stats?.totalJobs || 0, icon: ClipboardList, color: "text-amber-500", bg: "bg-amber-500/10" },
+    { label: "Applications", value: data?.stats?.totalApplications || 0, icon: CheckCircle2, color: "text-purple-500", bg: "bg-purple-500/10" },
+  ]
+
   return (
     <div className="space-y-6 md:space-y-10 w-full pb-10">
       {/* Header */}
@@ -35,9 +53,9 @@ export default function AdminDashboard() {
           <h1 className="text-3xl font-extrabold text-white tracking-tight">Admin Dashboard</h1>
           <p className="text-gray-400 mt-1 font-light tracking-wide italic">Holistic overview of placement ecosystem</p>
         </div>
-        <div className="flex gap-3">
-          <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse mt-2" />
-          <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest bg-white/5 px-3 py-1 rounded-full border border-white/5">System Live</span>
+        <div className="flex items-center gap-3">
+          <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+          <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest bg-white/5 px-3 py-1.5 rounded-full border border-white/10">Telemetry Active</span>
         </div>
       </div>
 
@@ -50,16 +68,12 @@ export default function AdminDashboard() {
                 <div className={`p-4 rounded-2xl ${stat.bg} ${stat.color} transition-transform group-hover:scale-110 duration-500`}>
                   <stat.icon className="h-6 w-6" />
                 </div>
-                <div className="text-right">
-                  <p className="flex items-center justify-end gap-1 text-xs font-bold text-emerald-500">
-                    <TrendingUp className="h-3 w-3" />
-                    {stat.change}
-                  </p>
-                  <p className="text-[10px] text-gray-500 font-medium uppercase tracking-tighter">vs last month</p>
+                <div className="h-8 w-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
+                   <TrendingUp className="h-3 w-3 text-emerald-500" />
                 </div>
               </div>
               <div>
-                <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">{stat.label}</p>
+                <p className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] mb-1">{stat.label}</p>
                 <p className="text-3xl font-extrabold text-white tracking-tight">{stat.value}</p>
               </div>
             </CardContent>
@@ -67,81 +81,73 @@ export default function AdminDashboard() {
         ))}
       </div>
 
-      {/* Two Column Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-10">
-        {/* Recent Applications */}
         <Card className="bg-white/5 border-white/10 min-h-[400px]">
           <CardHeader className="border-b border-white/5 pb-6">
-            <CardTitle className="text-xl font-bold text-white tracking-tight">Real-time Applications</CardTitle>
+            <CardTitle className="text-xl font-bold text-white tracking-tight">System Engagement</CardTitle>
           </CardHeader>
           <CardContent className="pt-6">
             <div className="space-y-4">
-              {recentApplications.map((app) => (
+              {data?.recentApplications?.map((app: any) => (
                 <div
                   key={app.id}
                   className="flex items-center justify-between p-4 rounded-2xl bg-white/[0.03] border border-white/5 hover:border-white/10 transition-all"
                 >
                   <div className="flex items-center gap-4">
-                    <div className="h-10 w-10 rounded-full bg-white/5 flex items-center justify-center text-gray-400 font-bold border border-white/10">
-                      {app.student.charAt(0)}
+                    <div className="h-10 w-10 rounded-full bg-white/5 flex items-center justify-center text-gray-400 font-bold border border-white/10 italic">
+                      {app.user?.fullName?.charAt(0) || 'U'}
                     </div>
                     <div>
-                      <p className="font-bold text-white tracking-tight">{app.student}</p>
-                      <p className="text-xs text-gray-500">
-                        {app.role} at <span className="text-gray-400 font-medium">{app.company}</span>
+                      <p className="font-bold text-white tracking-tight">{app.user?.fullName}</p>
+                      <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest mt-0.5">
+                        {app.job?.role} @ <span className="text-primary">{app.job?.company?.name}</span>
                       </p>
                     </div>
                   </div>
-                  <span
-                    className={`text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full ${
-                      app.status === "Selected"
-                        ? "bg-emerald-500/10 text-emerald-500"
-                        : app.status === "Shortlisted"
-                        ? "bg-blue-500/10 text-blue-500"
-                        : app.status === "Under Review"
-                        ? "bg-amber-500/10 text-amber-500"
-                        : "bg-white/5 text-gray-400"
-                    }`}
-                  >
-                    {app.status}
-                  </span>
+                  <Badge className="bg-emerald-500/10 text-emerald-500 border-none font-black text-[9px] uppercase tracking-widest">{app.status}</Badge>
                 </div>
               ))}
+              {(!data?.recentApplications || data?.recentApplications.length === 0) && (
+                <div className="flex flex-col items-center justify-center py-20 opacity-30">
+                   <ClipboardList className="h-16 w-16 mb-4" />
+                   <p className="text-xs font-black uppercase tracking-widest">No Engagement Logged</p>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
 
-        {/* Top Companies */}
         <Card className="bg-white/5 border-white/10 h-full">
           <CardHeader className="border-b border-white/5 pb-6">
             <CardTitle className="text-xl font-bold text-white tracking-tight">Demand Pipeline</CardTitle>
           </CardHeader>
           <CardContent className="pt-6">
             <div className="space-y-6">
-              {topCompanies.map((company, index) => (
+              {data?.topCompanies?.map((company: any, index: number) => (
                 <div key={company.name} className="flex flex-col gap-2">
                   <div className="flex items-center justify-between mb-1">
                     <div className="flex items-center gap-3">
                       <span className="text-[10px] font-black text-gray-600 w-4">{String(index + 1).padStart(2, '0')}</span>
                       <span className="font-bold text-white tracking-tight">{company.name}</span>
                     </div>
-                    <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+                    <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest bg-white/5 px-2 py-0.5 rounded border border-white/5">
                       {company.applications} Apps
                     </span>
                   </div>
-                  <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+                  <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-blue-500 rounded-full transition-all duration-1000"
-                      style={{ width: `${(company.applications / 245) * 100}%` }}
+                      className="h-full bg-primary rounded-full transition-all duration-1000 shadow-[0_0_10px_rgba(34,197,94,0.3)]"
+                      style={{ width: `${(company.applications / (data.topCompanies[0]?.applications || 1)) * 100}%` }}
                     />
                   </div>
                 </div>
               ))}
-            </div>
-            <div className="mt-10 pt-6 border-t border-white/5">
-               <button className="text-[10px] font-black text-gray-500 hover:text-[#22c55e] transition-colors uppercase tracking-[0.2em] flex items-center gap-2">
-                  View Detailed Analytics <ArrowRight className="h-3 w-3" />
-               </button>
+              {(!data?.topCompanies || data?.topCompanies.length === 0) && (
+                <div className="flex flex-col items-center justify-center py-20 opacity-30">
+                   <Building2 className="h-16 w-16 mb-4" />
+                   <p className="text-xs font-black uppercase tracking-widest">No Active Pipelines</p>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
