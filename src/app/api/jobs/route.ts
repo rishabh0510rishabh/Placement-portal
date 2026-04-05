@@ -116,3 +116,72 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: error.message || 'Internal server error over HTTPS' }, { status: 500 });
   }
 }
+
+// PATCH /api/jobs - Update an existing job (Admin Only)
+export async function PATCH(req: NextRequest) {
+  const session = await getServerSession(authOptions);
+  if (!session?.user || (session.user as any).role !== 'admin') {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+  }
+
+  const { searchParams } = new URL(req.url);
+  const id = searchParams.get('id');
+  if (!id) return NextResponse.json({ error: 'ID required' }, { status: 400 });
+
+  try {
+    const body = await req.json();
+    const safeBranches: string[] = (body.allowedBranches as string[]).map(b => b.replace('_', '-'));
+    
+    const { data: updatedJob, error } = await supabase
+      .from('JobListing')
+      .update({
+        companyId: body.companyId,
+        role: body.role,
+        category: body.category,
+        description: body.description,
+        minimumCgpa: body.minimumCgpa,
+        maximumBacklogs: body.maximumBacklogs,
+        salaryCtc: body.salaryCtc,
+        location: body.location,
+        allowedBranches: safeBranches,
+        deadline: new Date(body.deadline).toISOString(),
+        updatedAt: new Date().toISOString(),
+      })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return NextResponse.json({ job: updatedJob }, { status: 200 });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+
+// DELETE /api/jobs - Delete a job listing (Admin Only) via HTTPS
+export async function DELETE(req: NextRequest) {
+  const session = await getServerSession(authOptions);
+  if (!session?.user || (session.user as any).role !== 'admin') {
+    return NextResponse.json({ error: 'Unauthorized. Admin access required.' }, { status: 403 });
+  }
+
+  const { searchParams } = new URL(req.url);
+  const id = searchParams.get('id');
+
+  if (!id) {
+    return NextResponse.json({ error: 'Job ID is required' }, { status: 400 });
+  }
+
+  try {
+    const { error } = await supabase
+      .from('JobListing')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw error;
+    return NextResponse.json({ message: 'Job listing deleted successfully' }, { status: 200 });
+  } catch (error: any) {
+    console.error('Delete job error:', error.message);
+    return NextResponse.json({ error: 'Failed to delete job' }, { status: 500 });
+  }
+}

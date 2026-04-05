@@ -39,6 +39,7 @@ export default function CompaniesPage() {
     website: "",
     description: ""
   })
+  const [editingId, setEditingId] = useState<string | null>(null)
 
   useEffect(() => {
     fetchCompanies()
@@ -65,25 +66,58 @@ export default function CompaniesPage() {
     e.preventDefault()
     setIsSubmitting(true)
     try {
-      const res = await fetch("/api/admin/companies", {
-        method: "POST",
+      const isEditing = !!editingId
+      const res = await fetch("/api/admin/companies" + (isEditing ? `?id=${editingId}` : ""), {
+        method: isEditing ? "PATCH" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData)
       })
       const data = await res.json()
       if (res.ok) {
-        toast.success("Company added successfully!")
+        toast.success(`Company ${isEditing ? "updated" : "added"} successfully!`)
         setIsDialogOpen(false)
-        setFormData({ name: "", industry: "", website: "", description: "" })
+        resetForm()
         fetchCompanies()
       } else {
-        toast.error(data.error || "Failed to add company")
+        toast.error(data.error || `Failed to ${isEditing ? "update" : "add"} company`)
       }
     } catch (err) {
       toast.error("An unexpected error occurred")
     } finally {
       setIsSubmitting(false)
     }
+  }
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this company? All associated job listings will be affected.")) return
+    
+    try {
+      const res = await fetch(`/api/admin/companies?id=${id}`, { method: "DELETE" })
+      if (res.ok) {
+        toast.success("Company profile purged from database.")
+        fetchCompanies()
+      } else {
+        toast.error("Failed to delete company.")
+      }
+    } catch (err) {
+      toast.error("Networking error during deletion.")
+    }
+  }
+
+  const startEdit = (company: Company) => {
+    setEditingId(company.id)
+    setFormData({
+      name: company.name,
+      industry: company.industry,
+      website: company.website || "",
+      description: company.description || ""
+    })
+    setIsDialogOpen(true)
+  }
+
+  const resetForm = () => {
+    setEditingId(null)
+    setFormData({ name: "", industry: "", website: "", description: "" })
   }
 
   const filteredCompanies = companies.filter((company) =>
@@ -108,8 +142,10 @@ export default function CompaniesPage() {
           </DialogTrigger>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle>Add Company Profile</DialogTitle>
-              <DialogDescription>Create a new database entry for a recruiting organization.</DialogDescription>
+              <DialogTitle>{editingId ? "Edit Company Profile" : "Add Company Profile"}</DialogTitle>
+              <DialogDescription>
+                {editingId ? "Update existing organization record." : "Create a new database entry for a recruiting organization."}
+              </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4 pt-4">
               <div className="space-y-2">
@@ -154,7 +190,7 @@ export default function CompaniesPage() {
               <div className="flex justify-end gap-3 pt-4">
                 <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
                 <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Verify and Add Company"}
+                  {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : editingId ? "Save Changes" : "Verify and Add Company"}
                 </Button>
               </div>
             </form>
@@ -227,10 +263,10 @@ export default function CompaniesPage() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-1">
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => startEdit(company)}>
                           <Pencil className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive">
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => handleDelete(company.id)}>
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>

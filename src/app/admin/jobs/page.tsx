@@ -60,6 +60,7 @@ export default function JobsPage() {
     allowedBranches: [] as string[],
     requiredSkills: [] as string[],
   })
+  const [editingId, setEditingId] = useState<string | null>(null)
 
   useEffect(() => {
     fetchData()
@@ -113,6 +114,7 @@ export default function JobsPage() {
     }
 
     try {
+      const isEditing = !!editingId
       const payload = {
         ...formData,
         minimumCgpa: parseFloat(formData.minimumCgpa),
@@ -120,8 +122,8 @@ export default function JobsPage() {
         requiredSkills: [] // Optional for now
       }
 
-      const res = await fetch("/api/jobs", {
-        method: "POST",
+      const res = await fetch("/api/jobs" + (isEditing ? `?id=${editingId}` : ""), {
+        method: isEditing ? "PATCH" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
       })
@@ -129,23 +131,62 @@ export default function JobsPage() {
       const data = await res.json()
 
       if (res.ok) {
-        toast.success("Job posting live! Broadcast notifications sent to students.")
+        toast.success(`Job ${isEditing ? "updated" : "broadcast"} successfully!`)
         setIsDialogOpen(false)
-        setFormData({
-          companyId: "", role: "", category: "Full Time",
-          description: "", salaryCtc: "", location: "",
-          minimumCgpa: "", maximumBacklogs: "0", deadline: "",
-          allowedBranches: [], requiredSkills: []
-        })
+        resetForm()
         fetchData()
       } else {
-        toast.error(data.error || "Failed to broadcast job")
+        toast.error(data.error || `Failed to ${isEditing ? "update" : "broadcast"} job`)
       }
     } catch (err) {
       toast.error("An unexpected error occurred")
     } finally {
       setIsSubmitting(false)
     }
+  }
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Are you sure you want to terminate this job broadcast? This will remove the listing from all student dashboards.")) return
+    
+    try {
+      const res = await fetch(`/api/jobs?id=${id}`, { method: "DELETE" })
+      if (res.ok) {
+        toast.success("Recruitment broadcast terminated and removed.")
+        fetchData()
+      } else {
+        toast.error("Failed to delete job listing.")
+      }
+    } catch (err) {
+      toast.error("Networking error during deletion.")
+    }
+  }
+
+  const startEdit = (job: JobListing) => {
+    setEditingId(job.id)
+    setFormData({
+      companyId: job.companyId,
+      role: job.role,
+      category: job.category || "Full Time",
+      description: job.description,
+      salaryCtc: job.salaryCtc,
+      location: job.location,
+      minimumCgpa: job.minimumCgpa.toString(),
+      maximumBacklogs: job.maximumBacklogs.toString(),
+      deadline: job.deadline ? new Date(job.deadline).toISOString().split('T')[0] : "",
+      allowedBranches: job.allowedBranches || [],
+      requiredSkills: job.requiredSkills || [],
+    })
+    setIsDialogOpen(true)
+  }
+
+  const resetForm = () => {
+    setEditingId(null)
+    setFormData({
+      companyId: "", role: "", category: "Full Time",
+      description: "", salaryCtc: "", location: "",
+      minimumCgpa: "", maximumBacklogs: "0", deadline: "",
+      allowedBranches: [], requiredSkills: []
+    })
   }
 
   const filteredJobs = jobs.filter(
@@ -170,8 +211,10 @@ export default function JobsPage() {
           </DialogTrigger>
           <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle className="text-xl font-bold">New Recruitment Opportunity</DialogTitle>
-              <DialogDescription>Define your role and eligibility criteria for campus distribution.</DialogDescription>
+              <DialogTitle className="text-xl font-bold">{editingId ? "Modify Recruitment Opportunity" : "New Recruitment Opportunity"}</DialogTitle>
+              <DialogDescription>
+                {editingId ? "Update existing broadcast details." : "Define your role and eligibility criteria for campus distribution."}
+              </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-6 pt-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -298,7 +341,7 @@ export default function JobsPage() {
               <div className="flex justify-end gap-3 pt-6 border-t border-white/5">
                 <Button type="button" variant="ghost" onClick={() => setIsDialogOpen(false)} className="rounded-xl px-8 hover:bg-white/5">Cancel</Button>
                 <Button type="submit" disabled={isSubmitting} className="rounded-xl px-10 shadow-lg shadow-primary/20">
-                  {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Authorize Broadcast"}
+                  {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : editingId ? "Update Listing" : "Authorize Broadcast"}
                 </Button>
               </div>
             </form>
@@ -368,10 +411,10 @@ export default function JobsPage() {
                       </TableCell>
                       <TableCell className="text-right py-5 px-6">
                         <div className="flex justify-end gap-1">
-                          <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl hover:bg-white/5 border border-transparent hover:border-white/10">
+                          <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl hover:bg-white/5 border border-transparent hover:border-white/10" onClick={() => startEdit(job)}>
                             <Pencil className="h-4 w-4 text-gray-400" />
                           </Button>
-                          <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl hover:bg-destructive/10 border border-transparent hover:border-destructive/20 text-destructive/70">
+                          <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl hover:bg-destructive/10 border border-transparent hover:border-destructive/20 text-destructive/70" onClick={() => handleDelete(job.id)}>
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
