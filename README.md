@@ -15,7 +15,7 @@ A centralized, professional web ecosystem designed to transform the placement la
 
 # 🌟 Vision
 
-The portal replaces fragmented and manual placement coordination with a **unified, data-driven digital platform**.
+The portal replace fragmented and manual placement coordination with a **unified, data-driven digital platform**.
 
 Built with a modern system architecture and the **"Intellectual Atelier" design system**, the platform delivers a high-performance and editorial-style interface that reflects the professionalism of modern corporate environments.
 
