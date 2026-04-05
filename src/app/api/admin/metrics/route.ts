@@ -19,10 +19,10 @@ export async function GET() {
       { count: totalJobs },
       { count: totalApplications }
     ] = await Promise.all([
-      supabase.from('User').select('*', { count: 'exact', head: true }).eq('role', 'student'),
-      supabase.from('Company').select('*', { count: 'exact', head: true }),
-      supabase.from('JobListing').select('*', { count: 'exact', head: true }),
-      supabase.from('JobApplication').select('*', { count: 'exact', head: true })
+      supabase.from('User').select('id', { count: 'exact', head: true }).eq('role', 'student'),
+      supabase.from('Company').select('id', { count: 'exact', head: true }),
+      supabase.from('JobListing').select('id', { count: 'exact', head: true }),
+      supabase.from('JobApplication').select('id', { count: 'exact', head: true })
     ]);
 
     // Fetch recent applications
@@ -38,7 +38,7 @@ export async function GET() {
       .order('appliedAt', { ascending: false })
       .limit(5);
 
-    // Fetch top companies by application count
+    // Fetch companies by application count (Only needed fields)
     const { data: topCompaniesRaw } = await supabase
       .from('JobListing')
       .select(`

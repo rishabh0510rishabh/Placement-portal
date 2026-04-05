@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -104,17 +104,19 @@ export default function JobsPage() {
     }
   }
 
-  const filteredJobs = jobs.filter((job) => {
-    const matchesSearch =
-      job.company?.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      job.role.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesRole = roleFilter === "all" || job.role === roleFilter
-    const matchesLocation = locationFilter === "all" || job.location === locationFilter
-    return matchesSearch && matchesRole && matchesLocation
-  })
+  const filteredJobs = useMemo(() => {
+    return jobs.filter((job) => {
+      const matchesSearch =
+        job.company?.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        job.role.toLowerCase().includes(searchQuery.toLowerCase())
+      const matchesRole = roleFilter === "all" || job.role === roleFilter
+      const matchesLocation = locationFilter === "all" || job.location === locationFilter
+      return matchesSearch && matchesRole && matchesLocation
+    })
+  }, [jobs, searchQuery, roleFilter, locationFilter])
 
-  const uniqueRoles = Array.from(new Set(jobs.map((job) => job.role)))
-  const uniqueLocations = Array.from(new Set(jobs.map((job) => job.location)))
+  const uniqueRoles = useMemo(() => Array.from(new Set(jobs.map((job) => job.role))), [jobs])
+  const uniqueLocations = useMemo(() => Array.from(new Set(jobs.map((job) => job.location))), [jobs])
 
   return (
     <div className="space-y-6 w-full pb-10">
