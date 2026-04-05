@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Download, FileSpreadsheet, FileText, Users, Building2, ClipboardList } from "lucide-react"
+import { toast } from "sonner"
 
 const exportOptions = [
   {
@@ -49,7 +50,7 @@ const branches = [
 
 export default function ExportPage() {
   const [selectedExports, setSelectedExports] = useState<string[]>([])
-  const [format, setFormat] = useState("xlsx")
+  const [format, setFormat] = useState("csv")
   const [branch, setBranch] = useState("All Branches")
 
   const toggleExport = (id: string) => {
@@ -60,9 +61,51 @@ export default function ExportPage() {
     )
   }
 
-  const handleExport = () => {
-    console.log("Exporting:", { selectedExports, format, branch })
-    // Handle export logic
+  const handleExport = async () => {
+    toast.loading("Generating your export file...")
+    try {
+      // 1. Fetch live data based on selection
+      const results = await Promise.all(
+        selectedExports.map(async (id) => {
+          const endpoint = id === "students" ? "/api/admin/students" : 
+                           id === "companies" ? "/api/admin/companies" : 
+                           id === "applications" ? "/api/admin/applications" : "/api/jobs"
+          const res = await fetch(endpoint)
+          const data = await res.json()
+          return { id, data: data[id] || data.companies || data.students || data.jobs || data.applications || [] }
+        })
+      )
+
+      // 2. Convert to CSV (Using first selection for example)
+      if (results.length > 0) {
+        const { id, data } = results[0]
+        if (!data || data.length === 0) {
+          toast.dismiss()
+          toast.error(`No data found for ${id}`)
+          return
+        }
+
+        const headers = Object.keys(data[0]).join(",")
+        const rows = data.map((item: any) => 
+          Object.values(item).map(val => `"${val}"`).join(",")
+        ).join("\n")
+        
+        const csvContent = "data:text/csv;charset=utf-8," + headers + "\n" + rows
+        const encodedUri = encodeURI(csvContent)
+        const link = document.createElement("a")
+        link.setAttribute("href", encodedUri)
+        link.setAttribute("download", `rkgit_${id}_export_${new Date().toISOString().split('T')[0]}.csv`)
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        
+        toast.dismiss()
+        toast.success(`${id.toUpperCase()} export complete!`)
+      }
+    } catch (err) {
+      toast.dismiss()
+      toast.error("Export failure. Please check network connection.")
+    }
   }
 
   return (
@@ -117,27 +160,15 @@ export default function ExportPage() {
             <CardContent className="space-y-6">
               <div className="space-y-2">
                 <Label>File Format</Label>
-                <Select value={format} onValueChange={setFormat}>
-                  <SelectTrigger>
+                <Select value={format} onValueChange={setFormat} disabled>
+                  <SelectTrigger className="bg-secondary/20">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="xlsx">
-                      <div className="flex items-center gap-2">
-                        <FileSpreadsheet className="h-4 w-4" />
-                        Excel (.xlsx)
-                      </div>
-                    </SelectItem>
                     <SelectItem value="csv">
                       <div className="flex items-center gap-2">
                         <FileText className="h-4 w-4" />
-                        CSV (.csv)
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="pdf">
-                      <div className="flex items-center gap-2">
-                        <FileText className="h-4 w-4" />
-                        PDF (.pdf)
+                        CSV (.csv) - Optimized
                       </div>
                     </SelectItem>
                   </SelectContent>
@@ -177,22 +208,6 @@ export default function ExportPage() {
             </CardContent>
           </Card>
 
-          {/* Quick Export */}
-          <Card className="bg-card border-border">
-            <CardHeader>
-              <CardTitle className="text-lg">Quick Export</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <Button variant="outline" className="w-full justify-start gap-2">
-                <FileSpreadsheet className="h-4 w-4" />
-                Export All Data (Excel)
-              </Button>
-              <Button variant="outline" className="w-full justify-start gap-2">
-                <FileText className="h-4 w-4" />
-                Placement Report (PDF)
-              </Button>
-            </CardContent>
-          </Card>
         </div>
       </div>
     </div>
