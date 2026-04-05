@@ -53,7 +53,7 @@ export default function StudentDashboard() {
   }
 
   return (
-    <div className="space-y-6 md:space-y-10 max-w-7xl mx-auto pb-10">
+    <div className="space-y-6 md:space-y-10 w-full pb-10">
       {/* Header with Glass Gradient */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-white/[0.03] to-white/0 border border-white/5 p-8 md:p-12 mb-8 shadow-2xl">
         <div className="absolute top-0 right-0 w-64 h-64 bg-[#22c55e]/10 blur-[80px] -translate-y-1/2 translate-x-1/2 pointer-events-none" />

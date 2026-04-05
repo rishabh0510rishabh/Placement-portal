@@ -28,7 +28,7 @@ const topCompanies = [
 
 export default function AdminDashboard() {
   return (
-    <div className="space-y-6 md:space-y-10 max-w-7xl mx-auto pb-10">
+    <div className="space-y-6 md:space-y-10 w-full pb-10">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>

@@ -25,7 +25,7 @@ export default function LandingPage() {
       </div>
 
       {/* Content */}
-      <div className="relative z-10 flex flex-col items-center gap-10 text-center px-6 w-full max-w-5xl mx-auto">
+      <div className="relative z-10 flex flex-col items-center gap-10 text-center px-6 w-full max-w-7xl mx-auto">
         {/* College Logo */}
         <div className="relative group">
           <div className="absolute -inset-1 bg-white/20 rounded-full blur opacity-20 group-hover:opacity-40 transition-opacity duration-500" />

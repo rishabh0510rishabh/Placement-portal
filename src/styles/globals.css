@@ -118,4 +118,11 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  /* Standard Responsive Scaling */
+  @media (min-width: 1536px) {
+    html {
+      font-size: 100%;
+    }
+  }
 }

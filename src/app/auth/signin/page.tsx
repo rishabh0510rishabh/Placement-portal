@@ -55,7 +55,7 @@ function SignInForm() {
       <div className="absolute top-[20%] left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-[#22c55e]/5 blur-[120px] rounded-full pointer-events-none" />
 
       {/* Content */}
-      <div className="relative z-10 w-full max-w-lg">
+      <div className="relative z-10 w-full max-w-xl px-4">
         {/* College Logo */}
         <div className="flex justify-center mb-10">
           <Link href="/" className="hover:scale-105 transition-transform duration-500">
@@ -76,7 +76,7 @@ function SignInForm() {
                <ShieldCheck className="h-6 w-6 text-[#22c55e]" />
             </div>
             <h1 className="text-3xl font-extrabold text-white tracking-tight leading-tight">Welcome Back</h1>
-            <p className="text-base text-gray-500 mt-2 font-medium">Placement Portal Authentication</p>
+            <p className="text-base text-gray-500 mt-2 font-medium tracking-tight">Placement Portal Authentication Hub</p>
           </CardHeader>
           <CardContent className="px-8 pb-10">
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -103,7 +103,7 @@ function SignInForm() {
                     id="password"
                     type={showPassword ? "text" : "password"}
                     placeholder="••••••••"
-                    className="bg-white/5 border-white/5 focus:border-[#22c55e]/50 text-white placeholder:text-gray-700 h-14 pr-12 rounded-2xl transition-all"
+                    className="bg-white/5 border-white/5 focus:border-[#22c55e]/50 text-white placeholder:text-gray-700 h-14 rounded-2xl transition-all"
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                     required

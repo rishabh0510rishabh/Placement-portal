@@ -69,7 +69,7 @@ export default function SignUpPage() {
       <div className="absolute top-[20%] right-1/2 translate-x-1/2 w-[600px] h-[600px] bg-blue-500/5 blur-[120px] rounded-full pointer-events-none" />
 
       {/* Content */}
-      <div className="relative z-10 w-full max-w-lg">
+      <div className="relative z-10 w-full max-w-xl px-4">
         {/* College Logo */}
         <div className="flex justify-center mb-10">
           <Link href="/" className="hover:scale-105 transition-transform duration-500">
@@ -84,13 +84,13 @@ export default function SignUpPage() {
           </Link>
         </div>
 
-        <Card className="border-white/5 bg-white/[0.04] backdrop-blur-2xl shadow-[0_25px_80px_rgba(0,0,0,0.5)] overflow-hidden">
+        <Card className="border-white/5 bg-white/[0.04] backdrop-blur-2xl shadow-[0_25px_80_rgba(0,0,0,0.5)] overflow-hidden">
           <CardHeader className="text-center pt-10 pb-4">
             <div className="mx-auto h-12 w-12 bg-blue-500/10 rounded-2xl flex items-center justify-center mb-4 border border-blue-500/20">
                <UserPlus className="h-6 w-6 text-blue-500" />
             </div>
             <h1 className="text-3xl font-extrabold text-white tracking-tight leading-tight">Create Account</h1>
-            <p className="text-base text-gray-500 mt-2 font-medium">Join the RKGIT Placement Ecosystem</p>
+            <p className="text-base text-gray-500 mt-2 font-medium tracking-tight">Join the RKGIT Recruitment Hub</p>
           </CardHeader>
           <CardContent className="px-8 pb-10">
             <form onSubmit={handleSubmit} className="space-y-5">
