@@ -13,16 +13,30 @@ export async function POST(req: NextRequest) {
   const { gpas, cgpa } = await req.json();
 
   try {
-    // 1. Get student profile ID over HTTPS
-    const { data: profile, error: profileError } = await supabase
+    // 1. Get student profile ID (create if missing)
+    let { data: profile } = await supabase
       .from('StudentProfile')
       .select('id')
       .eq('userId', userId)
       .single();
 
-    if (profileError || !profile) {
-      return NextResponse.json({ error: 'Profile not found. Please complete basic profile first.' }, { status: 404 });
+    if (!profile) {
+      const { data: newProfile, error: profileError } = await supabase
+        .from('StudentProfile')
+        .insert({
+          id: crypto.randomUUID(),
+          userId: userId,
+          fullName: session.user?.name || 'Student',
+          email: session.user?.email || '',
+        })
+        .select('id')
+        .single();
+      
+      if (profileError) throw profileError;
+      profile = newProfile;
     }
+
+    if (!profile) return NextResponse.json({ error: 'Profile unavailable' }, { status: 500 });
 
     // 2. Update overall CGPA in profile
     const { error: updateError } = await supabase
@@ -38,7 +52,7 @@ export async function POST(req: NextRequest) {
       const gpaNum = parseFloat(gpa as string);
       if (isNaN(gpaNum) || gpaNum === 0) return null;
       return {
-        id: `${profile.id}_sem_${semNum}`, // Deterministic ID for upsert
+        // Removed custom deterministic ID string to avoid potential UUID type mismatch
         studentProfileId: profile.id,
         semester: semNum,
         gpa: gpaNum
@@ -46,15 +60,18 @@ export async function POST(req: NextRequest) {
     }).filter(row => row !== null);
 
     if (upsertRows.length > 0) {
+      // Assuming SemesterGPA has a unique constraint on (studentProfileId, semester)
       const { error: upsertError } = await supabase
         .from('SemesterGPA')
-        .upsert(upsertRows);
+        .upsert(upsertRows as any[], { onConflict: 'studentProfileId,semester' });
+      
       if (upsertError) throw upsertError;
     }
 
-    return NextResponse.json({ message: 'Academics updated successfully via HTTPS.' }, { status: 200 });
+    return NextResponse.json({ message: 'Academics updated successfully' }, { status: 200 });
   } catch (error: any) {
     console.error('Save academics error:', error.message);
-    return NextResponse.json({ error: 'Failed to update academic records over HTTPS.' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to update academic records' }, { status: 500 });
   }
 }
+

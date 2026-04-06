@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { GraduationCap, Save, Calculator, Loader2 } from "lucide-react"
+import { toast } from "sonner"
 
 const semesters = [1, 2, 3, 4, 5, 6, 7]
 
@@ -38,6 +39,7 @@ export default function AcademicsPage() {
         }
       } catch (err) {
         console.error("Failed to load academics:", err);
+        toast.error("Failed to sync academic records");
       } finally {
         setLoading(false);
       }
@@ -75,15 +77,19 @@ export default function AcademicsPage() {
         body: JSON.stringify({ gpas, cgpa }),
       });
       if (res.ok) {
-        alert("Academics updated successfully!");
+        toast.success("Academic records verified and saved!");
+      } else {
+        const err = await res.json();
+        toast.error(err.error || "Academics update failure");
       }
     } catch (err) {
       console.error("Save error:", err);
-      alert("Failed to save changes.");
+      toast.error("Networking terminal disconnect");
     } finally {
       setSaving(false);
     }
   }
+
 
   if (loading) {
     return (

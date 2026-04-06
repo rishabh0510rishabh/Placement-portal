@@ -17,6 +17,8 @@ import {
 } from "@/components/ui/dialog"
 import { FolderKanban, Plus, ExternalLink, Pencil, Trash2, Loader2 } from "lucide-react"
 
+import { toast } from "sonner"
+
 type Project = {
   id: string
   title: string
@@ -49,6 +51,7 @@ export default function ProjectsPage() {
         }
       } catch (err) {
         console.error("Load projects error:", err);
+        toast.error("Failed to load project database");
       } finally {
         setLoading(false);
       }
@@ -84,21 +87,25 @@ export default function ProjectsPage() {
         const result = await res.json();
         if (editingProject) {
           setProjects(projects.map((p) => (p.id === editingProject.id ? result.project : p)))
+          toast.success("Project updated successfully")
         } else {
           setProjects([...projects, result.project])
+          toast.success("New project indexed successfully")
         }
         resetForm()
         setIsDialogOpen(false)
       } else {
-        alert("Failed to save project.");
+        const err = await res.json()
+        toast.error(err.error || "Failed to save project segment")
       }
     } catch (err) {
       console.error("Save project error:", err);
-      alert("An error occurred.");
+      toast.error("Network communication failure")
     } finally {
       setSaving(false)
     }
   }
+
 
   const handleEdit = (project: Project) => {
     setEditingProject(project)

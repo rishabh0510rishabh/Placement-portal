@@ -14,13 +14,30 @@ export async function POST(req: NextRequest) {
   const { id, company, role, startDate, endDate, isCurrentRole, description } = await req.json();
 
   try {
-    const { data: profile } = await supabase
+    let { data: profile } = await supabase
       .from('StudentProfile')
       .select('id')
       .eq('userId', userId)
       .single();
 
-    if (!profile) return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
+    // If profile doesn't exist, create a stub
+    if (!profile) {
+      const { data: newProfile, error: profileError } = await supabase
+        .from('StudentProfile')
+        .insert({
+          id: crypto.randomUUID(),
+          userId: userId,
+          fullName: session.user?.name || 'Student',
+          email: session.user?.email || '',
+        })
+        .select('id')
+        .single();
+      
+      if (profileError) throw profileError;
+      profile = newProfile;
+    }
+
+    if (!profile) return NextResponse.json({ error: 'Profile unavailable' }, { status: 500 });
 
     const { data: experience, error } = await supabase
       .from('WorkExperience')
@@ -31,7 +48,7 @@ export async function POST(req: NextRequest) {
         role,
         startDate: new Date(startDate).toISOString(),
         endDate: endDate ? new Date(endDate).toISOString() : null,
-        isCurrentRole,
+        isCurrentRole: !!isCurrentRole,
         description
       })
       .select()
@@ -39,12 +56,13 @@ export async function POST(req: NextRequest) {
 
     if (error) throw error;
 
-    return NextResponse.json({ message: 'Experience saved over HTTPS', experience }, { status: 200 });
+    return NextResponse.json({ message: 'Experience saved successfully', experience }, { status: 200 });
   } catch (error: any) {
     console.error('Save experience error:', error.message);
-    return NextResponse.json({ error: 'Failed to update professional history over HTTPS.' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to update professional history' }, { status: 500 });
   }
 }
+
 
 // DELETE /api/profile/experience — Remove via HTTPS
 export async function DELETE(req: NextRequest) {

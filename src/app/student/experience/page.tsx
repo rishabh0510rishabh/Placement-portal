@@ -16,6 +16,8 @@ import {
 } from "@/components/ui/dialog"
 import { Briefcase, Plus, Pencil, Trash2, Building2, Loader2, Calendar } from "lucide-react"
 
+import { toast } from "sonner"
+
 type Experience = {
   id: string
   company: string
@@ -59,6 +61,7 @@ export default function ExperiencePage() {
         }
       } catch (err) {
         console.error("Load experience error:", err);
+        toast.error("Cloud history sync failure");
       } finally {
         setLoading(false);
       }
@@ -73,6 +76,12 @@ export default function ExperiencePage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    if (!formData.startDate) {
+      toast.error("Start date is required");
+      return;
+    }
+
     setSaving(true)
 
     const experienceData = {
@@ -100,21 +109,25 @@ export default function ExperiencePage() {
 
         if (editingExperience) {
           setExperiences(experiences.map((exp) => (exp.id === editingExperience.id ? savedExp : exp)))
+          toast.success("Experience record updated")
         } else {
           setExperiences([...experiences, savedExp])
+          toast.success("New professional record archived")
         }
         resetForm()
         setIsDialogOpen(false)
       } else {
-        alert("Failed to save experience.");
+        const err = await res.json()
+        toast.error(err.error || "Professional history update failure")
       }
     } catch (err) {
       console.error("Save error:", err);
-      alert("An error occurred.");
+      toast.error("Networking communication failure")
     } finally {
       setSaving(false)
     }
   }
+
 
   const handleEdit = (experience: Experience) => {
     setEditingExperience(experience)

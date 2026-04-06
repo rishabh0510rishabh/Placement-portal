@@ -18,6 +18,7 @@ const branches = [
   { id: "EN", name: "Electrical Engineering" },
   { id: "ME", name: "Mechanical Engineering" },
   { id: "CE", name: "Civil Engineering" },
+  { id: "Other", name: "Other / Not Listed" },
 ]
 
 export default function ProfilePage() {
@@ -48,11 +49,11 @@ export default function ProfilePage() {
       if (data.profile) {
         setFormData({
           fullName: data.profile.fullName || "",
-          rollNumber: data.profile.rollNumber || "",
-          collegeId: data.profile.collegeId || "",
-          branch: data.profile.branch || "",
+          rollNumber: data.profile.rollNumber === "NOT_SET" ? "" : (data.profile.rollNumber || ""),
+          collegeId: data.profile.collegeId === "NOT_SET" ? "" : (data.profile.collegeId || ""),
+          branch: data.profile.branch === "NOT_SET" ? "Other" : (data.profile.branch || "Other"),
           section: data.profile.section || "",
-          phoneNumber: data.profile.phoneNumber || "",
+          phoneNumber: data.profile.phoneNumber === "NOT_SET" ? "" : (data.profile.phoneNumber || ""),
           email: data.profile.email || "",
           currentSemester: data.profile.currentSemester?.toString() || "1",
           cgpa: data.profile.cgpa?.toString() || "",
@@ -60,6 +61,7 @@ export default function ProfilePage() {
           resumeUrl: data.profile.resumeUrl || "",
         })
       }
+
     } catch (err) {
       toast.error("Failed to sync profile telemetry")
     } finally {
@@ -76,9 +78,9 @@ export default function ProfilePage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
-          currentSemester: parseInt(formData.currentSemester),
-          cgpa: parseFloat(formData.cgpa),
-          activeBacklogs: parseInt(formData.activeBacklogs)
+          currentSemester: parseInt(formData.currentSemester) || 1,
+          cgpa: parseFloat(formData.cgpa) || 0,
+          activeBacklogs: parseInt(formData.activeBacklogs) || 0
         }),
       })
       if (res.ok) {

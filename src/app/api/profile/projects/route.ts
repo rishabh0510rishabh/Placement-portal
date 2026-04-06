@@ -14,19 +14,35 @@ export async function POST(req: NextRequest) {
   const { id, title, description, technologies, githubLink } = await req.json();
 
   try {
-    const { data: profile } = await supabase
+    let { data: profile } = await supabase
       .from('StudentProfile')
       .select('id')
       .eq('userId', userId)
       .single();
 
-    if (!profile) return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
+    // If profile doesn't exist (e.g. registration error), create a stub
+    if (!profile) {
+      const { data: newProfile, error: profileError } = await supabase
+        .from('StudentProfile')
+        .insert({
+          id: crypto.randomUUID(),
+          userId: userId,
+          fullName: session.user?.name || 'Student',
+          email: session.user?.email || '',
+        })
+        .select('id')
+        .single();
+      
+      if (profileError) throw profileError;
+      profile = newProfile;
+    }
 
-    const newId = id || `proj_${Date.now()}`;
+    if (!profile) return NextResponse.json({ error: 'Profile unavailable' }, { status: 500 });
+
     const { data: project, error } = await supabase
       .from('Project')
       .upsert({
-        id: id || undefined, // Supabase generates if empty, or we pass existing
+        id: id || undefined,
         studentProfileId: profile.id,
         title,
         description,
@@ -38,12 +54,13 @@ export async function POST(req: NextRequest) {
 
     if (error) throw error;
 
-    return NextResponse.json({ message: 'Project saved via HTTPS', project }, { status: 200 });
+    return NextResponse.json({ message: 'Project saved successfully', project }, { status: 200 });
   } catch (error: any) {
     console.error('Project save error:', error.message);
-    return NextResponse.json({ error: 'Failed to save project over HTTPS' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to save project' }, { status: 500 });
   }
 }
+
 
 // DELETE /api/profile/projects — Delete a project via HTTPS
 export async function DELETE(req: NextRequest) {

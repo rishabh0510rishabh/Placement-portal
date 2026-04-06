@@ -13,17 +13,42 @@ export async function POST(req: NextRequest) {
   const { skills } = await req.json();
 
   try {
+    let { data: profile } = await supabase
+      .from('StudentProfile')
+      .select('id')
+      .eq('userId', userId)
+      .single();
+
+    if (!profile) {
+      const { data: newProfile, error: profileError } = await supabase
+        .from('StudentProfile')
+        .insert({
+          id: crypto.randomUUID(),
+          userId: userId,
+          fullName: session.user?.name || 'Student',
+          email: session.user?.email || '',
+        })
+        .select('id')
+        .single();
+      
+      if (profileError) throw profileError;
+      profile = newProfile;
+    }
+
+    if (!profile) return NextResponse.json({ error: 'Profile unavailable' }, { status: 500 });
+
     // 1. Update the student profile's skills JSON field via HTTPS
     const { error } = await supabase
       .from('StudentProfile')
       .update({ skills })
-      .eq('userId', userId);
+      .eq('id', profile.id);
 
     if (error) throw error;
 
-    return NextResponse.json({ message: 'Skills saved successfully via HTTPS.' }, { status: 200 });
+    return NextResponse.json({ message: 'Skills saved successfully' }, { status: 200 });
   } catch (error: any) {
     console.error('Save skills error:', error.message);
-    return NextResponse.json({ error: 'Failed to update technical skills over HTTPS.' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to update technical skills' }, { status: 500 });
   }
 }
+

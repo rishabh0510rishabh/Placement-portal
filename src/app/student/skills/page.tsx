@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Code, Plus, X, Save, Loader2 } from "lucide-react"
+import { toast } from "sonner"
 
 type SkillCategory = {
   name: string
@@ -42,6 +43,7 @@ export default function SkillsPage() {
         }
       } catch (err) {
         console.error("Load skills error:", err);
+        toast.error("Failed to sync skills database");
       } finally {
         setLoading(false);
       }
@@ -96,11 +98,14 @@ export default function SkillsPage() {
         body: JSON.stringify({ skills: skillsPayload }),
       });
       if (res.ok) {
-        alert("Skills saved successfully!");
+        toast.success("Skills matrix updated successfully!");
+      } else {
+        const err = await res.json();
+        toast.error(err.error || "Skills verification failed");
       }
     } catch (err) {
       console.error("Save skills error:", err);
-      alert("Failed to save skills.");
+      toast.error("Networking terminal disconnect");
     } finally {
       setSaving(false);
     }

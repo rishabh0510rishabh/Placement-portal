@@ -47,10 +47,23 @@ export async function POST(req: NextRequest) {
   const userId = (session.user as { id: string }).id;
   const body = await req.json();
 
-  const { fullName, rollNumber, collegeId, branch, section, phoneNumber, email, currentSemester } = body;
+  const { 
+    fullName, 
+    rollNumber, 
+    collegeId, 
+    branch, 
+    section, 
+    phoneNumber, 
+    email, 
+    currentSemester,
+    cgpa,
+    activeBacklogs,
+    resumeUrl
+  } = body;
 
   try {
     // 2. Saving via Supabase HTTPS SDK (Instant Write over Port 443)
+    // Using onConflict: 'userId' ensures we update if profile exists, otherwise insert.
     const { data: profile, error } = await supabase
       .from('StudentProfile')
       .upsert({ 
@@ -62,12 +75,18 @@ export async function POST(req: NextRequest) {
         section, 
         phoneNumber, 
         email, 
-        currentSemester 
-      })
+        currentSemester,
+        cgpa,
+        activeBacklogs,
+        resumeUrl
+      }, { onConflict: 'userId' })
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error('Supabase upsert error:', error);
+      throw error;
+    }
 
     return NextResponse.json({ message: 'Profile saved successfully via HTTPS.', profile }, { status: 200 });
   } catch (error: any) {
@@ -75,3 +94,4 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Failed to save changes over HTTPS.' }, { status: 500 });
   }
 }
+
