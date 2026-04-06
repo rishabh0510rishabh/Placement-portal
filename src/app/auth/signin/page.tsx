@@ -138,38 +138,7 @@ function SignInForm() {
                 ) : "Login"}
               </Button>
 
-              <div className="relative py-4">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-white/5" />
-                </div>
-                <div className="relative flex justify-center text-[10px] uppercase tracking-[0.2em] font-black">
-                  <span className="bg-[#0e0e0e] px-4 text-gray-600">Quick Login Options</span>
-                </div>
-              </div>
 
-              {/* Fixed Alignment Demo Buttons */}
-              <div className="grid grid-cols-2 gap-4">
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  className="border-white/10 bg-white/[0.02] hover:bg-white/[0.06] text-gray-400 hover:text-white h-12 text-xs font-bold rounded-xl transition-all"
-                  onClick={() => {
-                    setFormData({ email: "student@rkgit.edu.in", password: "password123" });
-                  }}
-                >
-                  Student Login
-                </Button>
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  className="border-white/10 bg-white/[0.02] hover:bg-white/[0.06] text-gray-400 hover:text-white h-12 text-xs font-bold rounded-xl transition-all"
-                  onClick={() => {
-                    setFormData({ email: "admin@rkgit.edu.in", password: "password123" });
-                  }}
-                >
-                  Admin Login
-                </Button>
-              </div>
 
               <p className="text-center text-xs text-gray-500 mt-8 font-medium">
                 {"Don't have an institutional account? "}
