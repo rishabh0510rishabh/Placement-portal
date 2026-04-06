@@ -51,13 +51,21 @@ export async function POST(req: NextRequest) {
 
     if (updateError) throw updateError;
 
-    // 3. Upsert individual semester GPAs
+    // 3. Sync Semester GPAs using ID-based upsert to avoid missing composite constraint errors
+    const { data: existingGPAs } = await supabase
+      .from('SemesterGPA')
+      .select('id, semester')
+      .eq('studentProfileId', profile.id);
+
     const upsertRows = Object.entries(gpas).map(([semester, gpa]) => {
       const semNum = parseInt(semester);
       const gpaNum = parseFloat(gpa as string);
       if (isNaN(gpaNum) || gpaNum === 0) return null;
+      
+      const match = existingGPAs?.find(e => e.semester === semNum);
+      
       return {
-        // Removed custom deterministic ID string to avoid potential UUID type mismatch
+        id: match?.id || crypto.randomUUID(),
         studentProfileId: profile.id,
         semester: semNum,
         gpa: gpaNum
@@ -65,10 +73,9 @@ export async function POST(req: NextRequest) {
     }).filter(row => row !== null);
 
     if (upsertRows.length > 0) {
-      // Assuming SemesterGPA has a unique constraint on (studentProfileId, semester)
       const { error: upsertError } = await supabase
         .from('SemesterGPA')
-        .upsert(upsertRows as any[], { onConflict: 'studentProfileId,semester' });
+        .upsert(upsertRows as any[]); // Defaults to PK (id)
       
       if (upsertError) throw upsertError;
     }

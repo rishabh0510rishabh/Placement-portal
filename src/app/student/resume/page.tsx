@@ -133,7 +133,7 @@ export default function ResumePage() {
                   <Label htmlFor="url">Resume Hosting URL (Google Drive / Dropbox)</Label>
                   <Input
                     id="url"
-                    type="url"
+                    type="text"
                     placeholder="https://drive.google.com/..."
                     className="bg-background/50"
                     value={resumeData.url}

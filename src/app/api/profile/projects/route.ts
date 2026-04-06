@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
     const { data: project, error } = await supabase
       .from('Project')
       .upsert({
-        id: id || undefined,
+        id: id || crypto.randomUUID(),
         studentProfileId: profile.id,
         title,
         description,

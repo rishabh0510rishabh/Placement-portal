@@ -89,7 +89,7 @@ export default function LinksPage() {
               </Label>
               <Input
                 id="linkedin"
-                type="url"
+                type="text"
                 placeholder="https://linkedin.com/in/yourprofile"
                 value={formData.linkedin}
                 onChange={(e) => setFormData({ ...formData, linkedin: e.target.value })}
@@ -104,7 +104,7 @@ export default function LinksPage() {
               </Label>
               <Input
                 id="github"
-                type="url"
+                type="text"
                 placeholder="https://github.com/yourusername"
                 value={formData.github}
                 onChange={(e) => setFormData({ ...formData, github: e.target.value })}
@@ -119,7 +119,7 @@ export default function LinksPage() {
               </Label>
               <Input
                 id="leetcode"
-                type="url"
+                type="text"
                 placeholder="https://leetcode.com/u/yourusername"
                 value={formData.leetcode}
                 onChange={(e) => setFormData({ ...formData, leetcode: e.target.value })}
@@ -134,7 +134,7 @@ export default function LinksPage() {
               </Label>
               <Input
                 id="portfolio"
-                type="url"
+                type="text"
                 placeholder="https://yourportfolio.com"
                 value={formData.portfolio}
                 onChange={(e) => setFormData({ ...formData, portfolio: e.target.value })}

@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
     const { data: experience, error } = await supabase
       .from('WorkExperience')
       .upsert({
-        id: id || undefined,
+        id: id || crypto.randomUUID(),
         studentProfileId: profile.id,
         company,
         role,

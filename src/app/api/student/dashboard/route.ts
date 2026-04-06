@@ -15,7 +15,7 @@ export async function GET() {
     // 1. Fetch profile first as we need its ID for application counts
     const { data: profile, error: profileError } = await supabase
       .from('StudentProfile')
-      .select('id, fullName, applications:JobApplication(count)')
+      .select('id, fullName, portfolio, applications:JobApplication(count)')
       .eq('userId', userId)
       .single();
 
@@ -43,6 +43,12 @@ export async function GET() {
         .limit(5)
     ]);
 
+    const normalizeUrl = (url: string | null) => {
+      if (!url) return null;
+      if (url.startsWith('http://') || url.startsWith('https://')) return url;
+      return `https://${url}`;
+    };
+
     return NextResponse.json({
       stats: {
         activeJobs: activeJobs.count || 0,
@@ -51,6 +57,7 @@ export async function GET() {
         pending: pending.count || 0,
       },
       profileName: profile?.fullName?.split(' ')[0] || 'Student',
+      profilePortfolio: normalizeUrl(profile?.portfolio || null),
       notifications: notificationsResult.data || [],
       latestJobs: latestJobsResult.data || []
     }, { status: 200 });

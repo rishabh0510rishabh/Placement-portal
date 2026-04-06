@@ -63,6 +63,20 @@ export default function StudentDashboard() {
               ? `You have ${data.stats.pending} active recruitment processes this week. Keep your profile updated for higher visibility.` 
               : "Welcome to your placement portal. Start exploring recent job opportunities below."}
           </p>
+
+          {data?.profilePortfolio && (
+            <div className="mt-8 transition-all animate-in fade-in slide-in-from-bottom-4 duration-1000">
+              <a 
+                href={data.profilePortfolio} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-3 px-8 py-4 rounded-2xl bg-[#22c55e] hover:bg-[#22c55e]/90 text-black font-black text-xs uppercase tracking-[0.2em] shadow-xl shadow-[#22c55e]/20 transition-all hover:scale-105"
+              >
+                View Your Portfolio
+                <ArrowUpRight className="h-4 w-4" />
+              </a>
+            </div>
+          )}
         </div>
       </div>
 

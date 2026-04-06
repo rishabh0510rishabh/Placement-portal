@@ -190,6 +190,9 @@ export default function ExperiencePage() {
               <DialogTitle>
                 {editingExperience ? "Edit Experience" : "Add Work Experience"}
               </DialogTitle>
+              <DialogDescription>
+                {editingExperience ? "Update your professional history details." : "Add details about your work experience and internships."}
+              </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">

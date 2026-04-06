@@ -201,7 +201,7 @@ export default function ProjectsPage() {
                 <Label htmlFor="githubLink">GitHub Link (Optional)</Label>
                 <Input
                   id="githubLink"
-                  type="url"
+                  type="text"
                   placeholder="https://github.com/..."
                   value={formData.githubLink}
                   onChange={(e) => setFormData({ ...formData, githubLink: e.target.value })}

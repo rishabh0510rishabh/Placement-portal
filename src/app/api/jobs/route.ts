@@ -108,6 +108,8 @@ export async function POST(req: NextRequest) {
           message: `${newJob.company.name} is hiring for ${newJob.role}! Check eligibility criteria and apply now.`,
           type: 'job_alert',
           link: `/student/jobs/${newJob.id}`,
+          createdAt: nowISO,
+          updatedAt: nowISO,
         }));
 
         await supabase.from('Notification').insert(notifications);
