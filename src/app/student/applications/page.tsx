@@ -37,10 +37,10 @@ export default function ApplicationsPage() {
       if (res.ok) {
         setApplications(result.applications || [])
       } else {
-        toast.error(result.error || "Failed to load tracking data")
+        toast.error(result.error || "Failed to load your applications")
       }
     } catch (err) {
-      toast.error("Telemetry link failed")
+      toast.error("Connection error")
     } finally {
       setIsLoading(false)
     }
@@ -79,7 +79,7 @@ export default function ApplicationsPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-extrabold text-white tracking-tight">Active Applications</h1>
-          <p className="text-gray-400 mt-1 font-light tracking-wide italic">Track your engagement across recruitment pipelines</p>
+          <p className="text-gray-400 mt-1 font-light tracking-wide italic">Track your job applications and status</p>
         </div>
         <div className="flex items-center gap-3">
            <div className="h-2 w-2 rounded-full bg-blue-500 animate-pulse" />
@@ -109,7 +109,7 @@ export default function ApplicationsPage() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
               <Input
-                placeholder="Search by company identity or role..."
+                placeholder="Search by company or job role..."
                 className="pl-10 h-12 bg-white/5 border-white/10 rounded-xl"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -117,7 +117,7 @@ export default function ApplicationsPage() {
             </div>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-full sm:w-56 h-12 rounded-xl bg-white/5 border-white/10">
-                <SelectValue placeholder="All Streams" />
+                <SelectValue placeholder="All Statuses" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Statuses</SelectItem>
@@ -136,13 +136,13 @@ export default function ApplicationsPage() {
       {isLoading ? (
         <div className="flex flex-col items-center justify-center py-24 gap-4 opacity-50">
            <Loader2 className="h-10 w-10 animate-spin text-primary" />
-           <p className="text-xs font-black uppercase tracking-[0.2em]">Synchronizing Dossiers</p>
+           <p className="text-xs font-black uppercase tracking-[0.2em]">Loading applications...</p>
         </div>
       ) : filteredApplications.length === 0 ? (
         <Card className="bg-white/5 border-white/10 border-dashed shadow-xl">
           <CardContent className="flex flex-col items-center justify-center py-20 opacity-30">
             <ClipboardList className="h-16 w-16 mb-4" />
-            <p className="text-xs font-black uppercase tracking-[0.3em]">No Active Engagement Detected</p>
+            <p className="text-xs font-black uppercase tracking-[0.3em]">No applications found</p>
           </CardContent>
         </Card>
       ) : (
@@ -161,7 +161,7 @@ export default function ApplicationsPage() {
                         <p className="text-sm font-bold text-gray-400">{app.job?.role}</p>
                         <div className="flex items-center gap-1.5 text-[10px] text-gray-600 font-bold uppercase tracking-widest">
                           <Calendar className="h-3 w-3" />
-                          Logged: {new Date(app.appliedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                          Applied: {new Date(app.appliedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                         </div>
                       </div>
                     </div>
@@ -169,7 +169,7 @@ export default function ApplicationsPage() {
                   <div className="flex items-center justify-between sm:justify-end gap-6 border-t border-white/5 sm:border-0 pt-4 sm:pt-0">
                     <div className="text-right hidden md:block mr-2">
                        <p className="text-sm font-bold text-gray-400">{app.job?.salaryCtc}</p>
-                       <p className="text-[9px] font-black text-gray-600 uppercase tracking-tighter">Payload Value</p>
+                       <p className="text-[9px] font-black text-gray-600 uppercase tracking-tighter">Salary / Package</p>
                     </div>
                     <Badge className={cn("px-4 py-1.5 rounded-full border font-black text-[10px] uppercase tracking-[0.1em] shadow-sm", getStatusColor(app.status))}>
                       {statusConfig[app.status]?.label || app.status}

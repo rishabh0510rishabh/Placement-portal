@@ -43,7 +43,7 @@ export default function SkillsPage() {
         }
       } catch (err) {
         console.error("Load skills error:", err);
-        toast.error("Failed to sync skills database");
+        toast.error("Failed to load skills");
       } finally {
         setLoading(false);
       }
@@ -98,14 +98,14 @@ export default function SkillsPage() {
         body: JSON.stringify({ skills: skillsPayload }),
       });
       if (res.ok) {
-        toast.success("Skills matrix updated successfully!");
+        toast.success("Skills saved successfully!");
       } else {
         const err = await res.json();
-        toast.error(err.error || "Skills verification failed");
+        toast.error(err.error || "Failed to save skills");
       }
     } catch (err) {
       console.error("Save skills error:", err);
-      toast.error("Networking terminal disconnect");
+      toast.error("Connection error");
     } finally {
       setSaving(false);
     }

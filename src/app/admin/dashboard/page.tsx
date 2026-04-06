@@ -26,7 +26,7 @@ export default function AdminDashboard() {
         toast.error(result.error || "Failed to fetch metrics")
       }
     } catch (err) {
-      toast.error("Telemetry link failed")
+      toast.error("Connection error")
     } finally {
       setIsLoading(false)
     }
@@ -49,11 +49,11 @@ export default function AdminDashboard() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-extrabold text-white tracking-tight">Admin Dashboard</h1>
-          <p className="text-gray-400 mt-1 font-light tracking-wide italic">Holistic overview of placement ecosystem</p>
+          <p className="text-gray-400 mt-1 font-light tracking-wide italic">Quick overview of placement activities</p>
         </div>
         <div className="flex items-center gap-3">
           <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-          <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest bg-white/5 px-3 py-1.5 rounded-full border border-white/10">Telemetry Active</span>
+          <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest bg-white/5 px-3 py-1.5 rounded-full border border-white/10">Dashboard Live</span>
         </div>
       </div>
 
@@ -82,7 +82,7 @@ export default function AdminDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-10">
         <Card className="bg-white/5 border-white/10 min-h-[400px]">
           <CardHeader className="border-b border-white/5 pb-6">
-            <CardTitle className="text-xl font-bold text-white tracking-tight">System Engagement</CardTitle>
+            <CardTitle className="text-xl font-bold text-white tracking-tight">Recent Applications</CardTitle>
           </CardHeader>
           <CardContent className="pt-6">
             <div className="space-y-4">
@@ -108,7 +108,7 @@ export default function AdminDashboard() {
               {(!data?.recentApplications || data?.recentApplications.length === 0) && (
                 <div className="flex flex-col items-center justify-center py-20 opacity-30">
                    <ClipboardList className="h-16 w-16 mb-4" />
-                   <p className="text-xs font-black uppercase tracking-widest">No Engagement Logged</p>
+                   <p className="text-xs font-black uppercase tracking-widest">No applications yet</p>
                 </div>
               )}
             </div>
@@ -117,7 +117,7 @@ export default function AdminDashboard() {
 
         <Card className="bg-white/5 border-white/10 h-full">
           <CardHeader className="border-b border-white/5 pb-6">
-            <CardTitle className="text-xl font-bold text-white tracking-tight">Demand Pipeline</CardTitle>
+            <CardTitle className="text-xl font-bold text-white tracking-tight">Top Recruiting Companies</CardTitle>
           </CardHeader>
           <CardContent className="pt-6">
             <div className="space-y-6">
@@ -143,7 +143,7 @@ export default function AdminDashboard() {
               {(!data?.topCompanies || data?.topCompanies.length === 0) && (
                 <div className="flex flex-col items-center justify-center py-20 opacity-30">
                    <Building2 className="h-16 w-16 mb-4" />
-                   <p className="text-xs font-black uppercase tracking-widest">No Active Pipelines</p>
+                   <p className="text-xs font-black uppercase tracking-widest">No company activity yet</p>
                 </div>
               )}
             </div>

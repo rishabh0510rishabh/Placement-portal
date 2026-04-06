@@ -81,7 +81,7 @@ export default function JobsPage() {
       if (jobsRes.ok) setJobs(jobsData.jobs)
       if (companiesRes.ok) setCompanies(companiesData.companies)
     } catch (err) {
-      toast.error("Failed to sync recruitment data")
+      toast.error("Failed to load job data")
     } finally {
       setIsLoading(false)
     }
@@ -131,12 +131,12 @@ export default function JobsPage() {
       const data = await res.json()
 
       if (res.ok) {
-        toast.success(`Job ${isEditing ? "updated" : "broadcast"} successfully!`)
+        toast.success(`Job ${isEditing ? "updated" : "added"} successfully!`)
         setIsDialogOpen(false)
         resetForm()
         fetchData()
       } else {
-        toast.error(data.error || `Failed to ${isEditing ? "update" : "broadcast"} job`)
+        toast.error(data.error || `Failed to ${isEditing ? "update" : "add"} job`)
       }
     } catch (err) {
       toast.error("An unexpected error occurred")
@@ -146,18 +146,18 @@ export default function JobsPage() {
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to terminate this job broadcast? This will remove the listing from all student dashboards.")) return
+    if (!confirm("Are you sure you want to remove this job? This will remove the listing from all student dashboards.")) return
     
     try {
       const res = await fetch(`/api/jobs?id=${id}`, { method: "DELETE" })
       if (res.ok) {
-        toast.success("Recruitment broadcast terminated and removed.")
+        toast.success("Job removed successfully.")
         fetchData()
       } else {
         toast.error("Failed to delete job listing.")
       }
     } catch (err) {
-      toast.error("Networking error during deletion.")
+      toast.error("Connection error during deletion.")
     }
   }
 
@@ -199,27 +199,27 @@ export default function JobsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-foreground">Recruitment Terminal</h1>
-          <p className="text-muted-foreground mt-1 text-sm italic">Manage high-precision job opportunity broadcasting</p>
+          <h1 className="text-2xl font-semibold text-foreground">Placement Dashboard</h1>
+          <p className="text-muted-foreground mt-1 text-sm italic">Manage job postings and applications</p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button className="gap-2 bg-primary hover:bg-primary/90 shadow-lg shadow-primary/10">
               <Plus className="h-4 w-4" />
-              Broadcast Job
+              Add Job
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle className="text-xl font-bold">{editingId ? "Modify Recruitment Opportunity" : "New Recruitment Opportunity"}</DialogTitle>
+              <DialogTitle className="text-xl font-bold">{editingId ? "Edit Job Details" : "Add New Job"}</DialogTitle>
               <DialogDescription>
-                {editingId ? "Update existing broadcast details." : "Define your role and eligibility criteria for campus distribution."}
+                {editingId ? "Update existing job details." : "Define the job role and eligibility criteria for students."}
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-6 pt-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label htmlFor="companyId">Recruiting Organization</Label>
+                  <Label htmlFor="companyId">Recruiting Company</Label>
                   <Select 
                     value={formData.companyId} 
                     onValueChange={(val) => setFormData({...formData, companyId: val})}
@@ -235,7 +235,7 @@ export default function JobsPage() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="role">Role Title</Label>
+                  <Label htmlFor="role">Job Role</Label>
                   <Input
                     id="role"
                     placeholder="e.g., Software Engineering Trainee"
@@ -246,7 +246,7 @@ export default function JobsPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="salaryCtc">Compensation (CTC)</Label>
+                  <Label htmlFor="salaryCtc">Salary / Package (CTC)</Label>
                   <Input
                     id="salaryCtc"
                     placeholder="e.g., 6.5 LPA"
@@ -257,7 +257,7 @@ export default function JobsPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="location">Geographic Location</Label>
+                  <Label htmlFor="location">Job Location</Label>
                   <Input
                     id="location"
                     placeholder="e.g., Remote / Noida"
@@ -268,7 +268,7 @@ export default function JobsPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="minimumCgpa">C.G.P.A Cut-off</Label>
+                  <Label htmlFor="minimumCgpa">Minimum CGPA Required</Label>
                   <Input
                     id="minimumCgpa"
                     type="number"
@@ -282,7 +282,7 @@ export default function JobsPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="maximumBacklogs">Allowed Active Backlogs</Label>
+                  <Label htmlFor="maximumBacklogs">Maximum Backlogs Allowed</Label>
                   <Input
                     id="maximumBacklogs"
                     type="number"
@@ -295,7 +295,7 @@ export default function JobsPage() {
                   />
                 </div>
                 <div className="space-y-2 md:col-span-2">
-                  <Label htmlFor="deadline">Application Expiry (Deadline)</Label>
+                  <Label htmlFor="deadline">Application Deadline</Label>
                   <Input
                     id="deadline"
                     type="date"
@@ -308,7 +308,7 @@ export default function JobsPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="description">Strategic Job Description</Label>
+                <Label htmlFor="description">Job Description</Label>
                 <Textarea
                   id="description"
                   placeholder="Detailed role requirements and company highlights"
@@ -320,7 +320,7 @@ export default function JobsPage() {
               </div>
 
               <div className="space-y-4">
-                <Label className="text-xs uppercase font-black tracking-widest text-primary">Academic Eligibility Gates</Label>
+                <Label className="text-xs uppercase font-black tracking-widest text-primary">Eligible Branches</Label>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-5 rounded-2xl bg-white/[0.03] border border-white/5">
                   {branchOptions.map((branch) => (
                     <div key={branch.value} className="flex items-center space-x-3">
@@ -341,7 +341,7 @@ export default function JobsPage() {
               <div className="flex justify-end gap-3 pt-6 border-t border-white/5">
                 <Button type="button" variant="ghost" onClick={() => setIsDialogOpen(false)} className="rounded-xl px-8 hover:bg-white/5">Cancel</Button>
                 <Button type="submit" disabled={isSubmitting} className="rounded-xl px-10 shadow-lg shadow-primary/20">
-                  {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : editingId ? "Update Listing" : "Authorize Broadcast"}
+                  {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : editingId ? "Update Listing" : "Post Job"}
                 </Button>
               </div>
             </form>
@@ -355,7 +355,7 @@ export default function JobsPage() {
             <div className="relative max-w-md">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Audit recruitment pipeline..."
+                placeholder="Search jobs..."
                 className="pl-10 h-11 bg-white/5 border-white/10 rounded-xl"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -371,12 +371,12 @@ export default function JobsPage() {
               <Table>
                 <TableHeader className="bg-white/[0.01]">
                   <TableRow className="hover:bg-transparent border-white/5">
-                    <TableHead className="font-black uppercase text-[10px] tracking-widest text-gray-500 py-6">Organization</TableHead>
-                    <TableHead className="font-black uppercase text-[10px] tracking-widest text-gray-500 py-6">Role / Title</TableHead>
-                    <TableHead className="font-black uppercase text-[10px] tracking-widest text-gray-500 py-6 text-center">Eligibility</TableHead>
-                    <TableHead className="font-black uppercase text-[10px] tracking-widest text-gray-500 py-6 text-right">Compensation</TableHead>
-                    <TableHead className="font-black uppercase text-[10px] tracking-widest text-gray-500 py-6 text-right">Gate Status</TableHead>
-                    <TableHead className="font-black uppercase text-[10px] tracking-widest text-gray-500 py-6 text-right px-6">Terminal</TableHead>
+                    <TableHead className="font-black uppercase text-[10px] tracking-widest text-gray-500 py-6">Company</TableHead>
+                    <TableHead className="font-black uppercase text-[10px] tracking-widest text-gray-500 py-6">Job Role</TableHead>
+                    <TableHead className="font-black uppercase text-[10px] tracking-widest text-gray-500 py-6 text-center">Eligibility Criteria</TableHead>
+                    <TableHead className="font-black uppercase text-[10px] tracking-widest text-gray-500 py-6 text-right">Salary / Package</TableHead>
+                    <TableHead className="font-black uppercase text-[10px] tracking-widest text-gray-500 py-6 text-right">Application Status</TableHead>
+                    <TableHead className="font-black uppercase text-[10px] tracking-widest text-gray-500 py-6 text-right px-6">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -394,7 +394,7 @@ export default function JobsPage() {
                       <TableCell className="py-5 text-center">
                         <div className="flex flex-col items-center gap-1">
                            <span className="text-[10px] font-black text-emerald-500 uppercase tracking-tighter">CGPA ≥ {job.minimumCgpa}</span>
-                           <span className="text-[10px] font-black text-gray-600 uppercase tracking-tighter">{job.allowedBranches.length} Gates Open</span>
+                           <span className="text-[10px] font-black text-gray-600 uppercase tracking-tighter">{job.allowedBranches.length} Branches Eligible</span>
                         </div>
                       </TableCell>
                       <TableCell className="py-5 text-right font-black text-[#22c55e]">{job.salaryCtc}</TableCell>
@@ -406,7 +406,7 @@ export default function JobsPage() {
                               : "bg-muted text-muted-foreground border-white/10 rounded-full font-black text-[9px] uppercase tracking-widest"
                           }
                         >
-                          {job.status === "active" ? "Broadcasting" : "Offline"}
+                          {job.status === "active" ? "Active" : "Closed"}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right py-5 px-6">
@@ -427,7 +427,7 @@ export default function JobsPage() {
             {!isLoading && filteredJobs.length === 0 && (
               <div className="flex flex-col items-center justify-center py-20 grayscale opacity-40">
                 <Briefcase className="h-16 w-16 text-muted-foreground mb-4" />
-                <p className="text-muted-foreground font-black uppercase tracking-[0.3em] text-xs">No Opportunity Detected</p>
+                <p className="text-muted-foreground font-black uppercase tracking-[0.3em] text-xs">No jobs found</p>
               </div>
             )}
           </div>

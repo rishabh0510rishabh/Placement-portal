@@ -39,7 +39,7 @@ export default function AcademicsPage() {
         }
       } catch (err) {
         console.error("Failed to load academics:", err);
-        toast.error("Failed to sync academic records");
+        toast.error("Failed to load academic records");
       } finally {
         setLoading(false);
       }
@@ -77,14 +77,14 @@ export default function AcademicsPage() {
         body: JSON.stringify({ gpas, cgpa }),
       });
       if (res.ok) {
-        toast.success("Academic records verified and saved!");
+        toast.success("Academic records saved successfully!");
       } else {
         const err = await res.json();
-        toast.error(err.error || "Academics update failure");
+        toast.error(err.error || "Failed to save academic records");
       }
     } catch (err) {
       console.error("Save error:", err);
-      toast.error("Networking terminal disconnect");
+      toast.error("Connection error");
     } finally {
       setSaving(false);
     }

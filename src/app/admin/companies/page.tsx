@@ -56,7 +56,7 @@ export default function CompaniesPage() {
         toast.error(data.error || "Failed to fetch companies")
       }
     } catch (err) {
-      toast.error("Networking error")
+      toast.error("Connection error")
     } finally {
       setIsLoading(false)
     }
@@ -94,13 +94,13 @@ export default function CompaniesPage() {
     try {
       const res = await fetch(`/api/admin/companies?id=${id}`, { method: "DELETE" })
       if (res.ok) {
-        toast.success("Company profile purged from database.")
+        toast.success("Company removed successfully.")
         fetchCompanies()
       } else {
         toast.error("Failed to delete company.")
       }
     } catch (err) {
-      toast.error("Networking error during deletion.")
+      toast.error("Connection error during deletion.")
     }
   }
 
@@ -144,12 +144,12 @@ export default function CompaniesPage() {
             <DialogHeader>
               <DialogTitle>{editingId ? "Edit Company Profile" : "Add Company Profile"}</DialogTitle>
               <DialogDescription>
-                {editingId ? "Update existing organization record." : "Create a new database entry for a recruiting organization."}
+                {editingId ? "Update company details." : "Add a new company to the portal."}
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4 pt-4">
               <div className="space-y-2">
-                <Label htmlFor="name">Exact Name</Label>
+                <Label htmlFor="name">Company Name</Label>
                 <Input
                   id="name"
                   placeholder="e.g., Google India"
@@ -159,7 +159,7 @@ export default function CompaniesPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="industry">Industry Sector</Label>
+                <Label htmlFor="industry">Industry</Label>
                 <Input
                   id="industry"
                   placeholder="e.g., Cloud Computing"
@@ -169,7 +169,7 @@ export default function CompaniesPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="website">Official Website URL</Label>
+                <Label htmlFor="website">Website Link</Label>
                 <Input
                   id="website"
                   type="text"
@@ -182,7 +182,7 @@ export default function CompaniesPage() {
                 <Label htmlFor="description">About the Company</Label>
                 <Textarea
                   id="description"
-                  placeholder="Brief overview of the organization"
+                  placeholder="About the company"
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 />
@@ -190,7 +190,7 @@ export default function CompaniesPage() {
               <div className="flex justify-end gap-3 pt-4">
                 <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
                 <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : editingId ? "Save Changes" : "Verify and Add Company"}
+                  {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : editingId ? "Save Changes" : "Add Company"}
                 </Button>
               </div>
             </form>

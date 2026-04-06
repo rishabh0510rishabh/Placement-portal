@@ -86,12 +86,12 @@ function SignInForm() {
                <ShieldCheck className="h-6 w-6 text-[#22c55e]" />
             </div>
             <h1 className="text-3xl font-extrabold text-white tracking-tight leading-tight">Welcome Back</h1>
-            <p className="text-base text-gray-500 mt-2 font-medium tracking-tight">Placement Portal Authentication Hub</p>
+            <p className="text-base text-gray-500 mt-2 font-medium tracking-tight">Placement Portal Login</p>
           </CardHeader>
           <CardContent className="px-8 pb-10">
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-[10px] uppercase font-black tracking-widest text-gray-500 pl-1">College Credentials (Email)</Label>
+                <Label htmlFor="email" className="text-[10px] uppercase font-black tracking-widest text-gray-500 pl-1">College Email ID</Label>
                 <Input
                   id="email"
                   type="email"
@@ -105,8 +105,8 @@ function SignInForm() {
 
               <div className="space-y-2">
                 <div className="flex items-center justify-between px-1">
-                  <Label htmlFor="password" title="Password" className="text-[10px] uppercase font-black tracking-widest text-gray-500">Security Phrase</Label>
-                  <Link href="#" className="text-[10px] font-black text-[#22c55e] hover:text-[#16a34a] transition-colors uppercase tracking-widest">Reset Key</Link>
+                  <Label htmlFor="password" title="Password" className="text-[10px] uppercase font-black tracking-widest text-gray-500">Password</Label>
+                  <Link href="#" className="text-[10px] font-black text-[#22c55e] hover:text-[#16a34a] transition-colors uppercase tracking-widest">Reset Password</Link>
                 </div>
                 <div className="relative">
                   <Input
@@ -135,7 +135,7 @@ function SignInForm() {
               >
                 {isLoading ? (
                   <Loader2 className="h-6 w-6 animate-spin" />
-                ) : "Verify Identity"}
+                ) : "Login"}
               </Button>
 
               <div className="relative py-4">
@@ -143,7 +143,7 @@ function SignInForm() {
                   <span className="w-full border-t border-white/5" />
                 </div>
                 <div className="relative flex justify-center text-[10px] uppercase tracking-[0.2em] font-black">
-                  <span className="bg-[#0e0e0e] px-4 text-gray-600">Evaluation Phase Access</span>
+                  <span className="bg-[#0e0e0e] px-4 text-gray-600">Quick Login Options</span>
                 </div>
               </div>
 
@@ -157,7 +157,7 @@ function SignInForm() {
                     setFormData({ email: "student@rkgit.edu.in", password: "password123" });
                   }}
                 >
-                  Student Access
+                  Student Login
                 </Button>
                 <Button 
                   type="button" 
@@ -167,14 +167,14 @@ function SignInForm() {
                     setFormData({ email: "admin@rkgit.edu.in", password: "password123" });
                   }}
                 >
-                  Admin Terminal
+                  Admin Login
                 </Button>
               </div>
 
               <p className="text-center text-xs text-gray-500 mt-8 font-medium">
                 {"Don't have an institutional account? "}
                 <Link href="/auth/signup" className="text-[#22c55e] font-black hover:underline tracking-tight transition-all">
-                  Onboard Here
+                  Register Now
                 </Link>
               </p>
             </form>

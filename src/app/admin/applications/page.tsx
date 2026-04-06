@@ -53,10 +53,10 @@ export default function ApplicationsPage() {
       if (res.ok) {
         setApplications(result.applications || [])
       } else {
-        toast.error(result.error || "Synchronicity failure in application stream")
+        toast.error(result.error || "Connection error")
       }
     } catch (err) {
-      toast.error("Telemetry link lost")
+      toast.error("Connection error")
     } finally {
       setIsLoading(false)
     }
@@ -90,7 +90,7 @@ export default function ApplicationsPage() {
       if (!res.ok) throw new Error("Failed to update status")
       toast.success(`Candidate status transitioned to ${newStatus.toUpperCase()}`)
     } catch (err) {
-      toast.error("Status state mutation failed. Reverting...")
+      toast.error("Failed to update status. Reverting...")
       setApplications(prev => prev.map(a => a.id === id ? { ...a, status: originalStatus } : a))
     }
   }
@@ -100,12 +100,12 @@ export default function ApplicationsPage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold text-white tracking-tight">Application Terminal</h1>
-          <p className="text-gray-400 mt-1 font-light tracking-wide italic">Manage and audit candidate flow through recruitment funnels</p>
+          <h1 className="text-3xl font-extrabold text-white tracking-tight">Job Applications</h1>
+          <p className="text-gray-400 mt-1 font-light tracking-wide italic">Manage student applications and tracking</p>
         </div>
         <div className="flex items-center gap-3">
            <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-           <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest bg-white/5 px-3 py-1.5 rounded-full border border-white/10">Engine Online</span>
+            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest bg-white/5 px-3 py-1.5 rounded-full border border-white/10">System Ready</span>
         </div>
       </div>
 
@@ -116,7 +116,7 @@ export default function ApplicationsPage() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
               <Input
-                placeholder="Search by candidate identity or digital handle..."
+                placeholder="Search by student name or email..."
                 className="pl-10 h-12 bg-white/5 border-white/10 rounded-xl"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -125,7 +125,7 @@ export default function ApplicationsPage() {
             <div className="flex flex-col sm:flex-row gap-4">
               <Select value={companyFilter} onValueChange={setCompanyFilter}>
                 <SelectTrigger className="w-full sm:w-56 h-12 rounded-xl bg-white/5 border-white/10">
-                  <SelectValue placeholder="Organization" />
+                  <SelectValue placeholder="Company" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Companies</SelectItem>
@@ -138,7 +138,7 @@ export default function ApplicationsPage() {
               </Select>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="w-full sm:w-56 h-12 rounded-xl bg-white/5 border-white/10">
-                  <SelectValue placeholder="Pipeline State" />
+                  <SelectValue placeholder="Application Status" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Statuses</SelectItem>
@@ -160,17 +160,17 @@ export default function ApplicationsPage() {
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-24 gap-4 opacity-50">
                <Loader2 className="h-10 w-10 animate-spin text-primary" />
-               <p className="text-xs font-black uppercase tracking-[0.2em]">Aggregating Pipeline Data</p>
+               <p className="text-xs font-black uppercase tracking-[0.2em]">Loading applications...</p>
             </div>
           ) : (
             <Table>
               <TableHeader className="bg-white/[0.01]">
                 <TableRow className="hover:bg-transparent border-white/5">
-                  <TableHead className="font-black uppercase text-[10px] tracking-widest text-gray-500 py-6">Applicant Portfolio</TableHead>
-                  <TableHead className="font-black uppercase text-[10px] tracking-widest text-gray-500 py-6">Target Opportunity</TableHead>
-                  <TableHead className="font-black uppercase text-[10px] tracking-widest text-gray-500 py-6 text-center">Applied Date</TableHead>
-                  <TableHead className="font-black uppercase text-[10px] tracking-widest text-gray-500 py-6 text-center">Current State</TableHead>
-                  <TableHead className="font-black uppercase text-[10px] tracking-widest text-gray-500 py-6 text-right px-8">Operations</TableHead>
+                   <TableHead className="font-black uppercase text-[10px] tracking-widest text-gray-500 py-6">Student Name</TableHead>
+                   <TableHead className="font-black uppercase text-[10px] tracking-widest text-gray-500 py-6">Job Applied For</TableHead>
+                   <TableHead className="font-black uppercase text-[10px] tracking-widest text-gray-500 py-6 text-center">Applied Date</TableHead>
+                   <TableHead className="font-black uppercase text-[10px] tracking-widest text-gray-500 py-6 text-center">Application Status</TableHead>
+                   <TableHead className="font-black uppercase text-[10px] tracking-widest text-gray-500 py-6 text-right px-8">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -216,27 +216,27 @@ export default function ApplicationsPage() {
                         <DropdownMenuContent align="end" className="w-56 bg-[#0a0a0a] border-white/10 rounded-xl">
                           <DropdownMenuItem className="text-[11px] font-bold uppercase tracking-wider h-11 focus:bg-white/5 cursor-pointer" onClick={() => window.open(app.resumeUrl, '_blank')}>
                             <FileText className="h-4 w-4 mr-3 text-blue-500" />
-                            Audit Resume Dossier
+                             Audit Resume
                           </DropdownMenuItem>
                           <div className="h-px bg-white/5 my-1" />
                           <DropdownMenuItem className="text-[11px] font-bold uppercase tracking-wider h-11 focus:bg-white/5 cursor-pointer" onClick={() => updateStatus(app.id, "shortlisted")}>
                             <CheckCircle className="h-4 w-4 mr-3 text-primary" />
-                            Transition to shortlist
+                             Shortlist Candidate
                           </DropdownMenuItem>
                           <DropdownMenuItem className="text-[11px] font-bold uppercase tracking-wider h-11 focus:bg-white/5 cursor-pointer" onClick={() => updateStatus(app.id, "interviewing")}>
                             <MoreHorizontal className="h-4 w-4 mr-3 text-blue-400" />
-                            Initiate Interview Phase
+                             Move to Interview
                           </DropdownMenuItem>
                           <DropdownMenuItem className="text-[11px] font-bold uppercase tracking-wider h-11 focus:bg-white/5 cursor-pointer" onClick={() => updateStatus(app.id, "hired")}>
                             <CheckCircle className="h-4 w-4 mr-3 text-emerald-500" />
-                            Final Selection / Hired
+                             Hire Candidate
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={() => updateStatus(app.id, "rejected")}
                             className="text-[11px] font-bold uppercase tracking-wider h-11 focus:bg-destructive/10 text-destructive/80 focus:text-destructive cursor-pointer"
                           >
                             <XCircle className="h-4 w-4 mr-3" />
-                            Terminal Rejection
+                             Reject Application
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -249,7 +249,7 @@ export default function ApplicationsPage() {
           {!isLoading && filteredApplications.length === 0 && (
             <div className="flex flex-col items-center justify-center py-20 grayscale opacity-40">
               <ClipboardList className="h-16 w-16 text-muted-foreground mb-4" />
-              <p className="text-muted-foreground font-black uppercase tracking-[0.3em] text-xs">No Candidate Records Detected</p>
+               <p className="text-muted-foreground font-black uppercase tracking-[0.3em] text-xs">No applications found</p>
             </div>
           )}
         </CardContent>

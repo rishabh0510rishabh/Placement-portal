@@ -44,10 +44,10 @@ export default function StudentsPage() {
       if (res.ok) {
         setStudents(result.students)
       } else {
-        toast.error(result.error || "Failed to fetch candidate directory")
+        toast.error(result.error || "Failed to load student list")
       }
     } catch (err) {
-      toast.error("Telemetry link failed")
+      toast.error("Connection error")
     } finally {
       setIsLoading(false)
     }
@@ -68,12 +68,12 @@ export default function StudentsPage() {
     <div className="space-y-6 w-full pb-10">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold text-foreground">Candidate Directory</h1>
-          <p className="text-muted-foreground mt-1 text-sm italic">Manage high-precision student data and academic records</p>
+          <h1 className="text-2xl font-semibold text-foreground">Student List</h1>
+          <p className="text-muted-foreground mt-1 text-sm italic">Manage student data and records</p>
         </div>
         <div className="flex items-center gap-3">
            <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-           <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest bg-white/5 px-2 py-1.5 rounded-full border border-white/10">Directory Live</span>
+           <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest bg-white/5 px-2 py-1.5 rounded-full border border-white/10">List Updated</span>
         </div>
       </div>
 
@@ -83,7 +83,7 @@ export default function StudentsPage() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search candidates by name, identity, or email..."
+                placeholder="Search students by name, roll number, or email..."
                 className="pl-10 h-11 bg-white/5 border-white/10 rounded-xl"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -114,11 +114,11 @@ export default function StudentsPage() {
             <Table>
               <TableHeader className="bg-white/[0.01]">
                 <TableRow className="hover:bg-transparent border-white/5">
-                  <TableHead className="py-6 font-black uppercase text-[10px] tracking-widest text-gray-500">Applicant</TableHead>
-                  <TableHead className="py-6 font-black uppercase text-[10px] tracking-widest text-gray-500">Roll/Identity</TableHead>
-                  <TableHead className="py-6 font-black uppercase text-[10px] tracking-widest text-gray-500 text-center">Academic Track</TableHead>
+                  <TableHead className="py-6 font-black uppercase text-[10px] tracking-widest text-gray-500">Student Name</TableHead>
+                  <TableHead className="py-6 font-black uppercase text-[10px] tracking-widest text-gray-500">Roll Number</TableHead>
+                  <TableHead className="py-6 font-black uppercase text-[10px] tracking-widest text-gray-500 text-center">Course / Branch</TableHead>
                   <TableHead className="py-6 font-black uppercase text-[10px] tracking-widest text-gray-500 text-right">C.G.P.A</TableHead>
-                  <TableHead className="py-6 font-black uppercase text-[10px] tracking-widest text-gray-500 text-right px-6">Terminal</TableHead>
+                  <TableHead className="py-6 font-black uppercase text-[10px] tracking-widest text-gray-500 text-right px-6">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -149,7 +149,7 @@ export default function StudentsPage() {
                         className="rounded-xl h-9 hover:bg-white/5 border border-transparent hover:border-white/10 text-xs font-bold"
                         onClick={() => setSelectedStudent(student)}
                       >
-                        <Eye className="h-3 w-3 mr-2" /> View Dossier
+                        <Eye className="h-3 w-3 mr-2" /> View Profile
                       </Button>
                     </TableCell>
                   </TableRow>
@@ -160,7 +160,7 @@ export default function StudentsPage() {
           {!isLoading && filteredStudents.length === 0 && (
             <div className="flex flex-col items-center justify-center py-20 grayscale opacity-40">
               <Users className="h-16 w-16 text-muted-foreground mb-4" />
-              <p className="text-muted-foreground font-black uppercase tracking-[0.3em] text-xs">No Candidate Records</p>
+              <p className="text-muted-foreground font-black uppercase tracking-[0.3em] text-xs">No students found</p>
             </div>
           )}
         </CardContent>
@@ -170,8 +170,8 @@ export default function StudentsPage() {
       <Dialog open={!!selectedStudent} onOpenChange={(open) => !open && setSelectedStudent(null)}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle className="text-xl font-bold tracking-tight">Candidate Profile Dossier</DialogTitle>
-            <DialogDescription>Verified institutional records for {selectedStudent?.fullName}</DialogDescription>
+            <DialogTitle className="text-xl font-bold tracking-tight">Student Profile</DialogTitle>
+            <DialogDescription>Information for {selectedStudent?.fullName}</DialogDescription>
           </DialogHeader>
           {selectedStudent && (
             <div className="space-y-6 pt-4">
@@ -185,16 +185,16 @@ export default function StudentsPage() {
                        <p className="text-xs text-gray-500 uppercase tracking-widest font-black">{selectedStudent.rollNumber}</p>
                     </div>
                  </div>
-                 <Badge className="bg-emerald-500/10 text-emerald-500 border-none font-black text-[9px] uppercase tracking-widest">Active Pool</Badge>
+                 <Badge className="bg-emerald-500/10 text-emerald-500 border-none font-black text-[9px] uppercase tracking-widest">Registered</Badge>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                  <Card className="bg-white/5 border-white/5 col-span-1 p-4 shadow-none">
-                    <p className="text-[10px] font-black uppercase text-gray-500 tracking-widest mb-1">Academic Rank</p>
+                    <p className="text-[10px] font-black uppercase text-gray-500 tracking-widest mb-1">Overall CGPA</p>
                     <p className="text-xl font-black text-white">{selectedStudent.cgpa?.toFixed(2)} CGPA</p>
                  </Card>
                  <Card className="bg-white/5 border-white/5 col-span-1 p-4 shadow-none">
-                    <p className="text-[10px] font-black uppercase text-gray-500 tracking-widest mb-1">Obstacles</p>
+                    <p className="text-[10px] font-black uppercase text-gray-500 tracking-widest mb-1">Backlogs</p>
                     <p className={`text-xl font-black ${selectedStudent.activeBacklogs > 0 ? 'text-red-500' : 'text-emerald-500'}`}>
                        {selectedStudent.activeBacklogs} Backlogs
                     </p>
@@ -223,12 +223,12 @@ export default function StudentsPage() {
                   rel="noreferrer"
                   className="flex items-center justify-center gap-2 w-full p-4 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-blue-400 font-black text-sm uppercase tracking-widest hover:bg-blue-500/20 transition-all"
                 >
-                   <Link2 className="h-4 w-4" /> Download Resume Payload
+                   <Link2 className="h-4 w-4" /> Download Resume
                 </a>
               )}
 
               <div className="flex justify-end pt-4">
-                <Button variant="ghost" onClick={() => setSelectedStudent(null)} className="rounded-xl px-10 text-xs font-black uppercase tracking-widest">Close Dossier</Button>
+                <Button variant="ghost" onClick={() => setSelectedStudent(null)} className="rounded-xl px-10 text-xs font-black uppercase tracking-widest">Close</Button>
               </div>
             </div>
           )}

@@ -63,7 +63,7 @@ export default function ProfilePage() {
       }
 
     } catch (err) {
-      toast.error("Failed to sync profile telemetry")
+      toast.error("Failed to load profile")
     } finally {
       setLoading(false)
     }
@@ -88,10 +88,10 @@ export default function ProfilePage() {
         fetchProfile()
       } else {
         const err = await res.json()
-        toast.error(err.error || "Profile synchronization failure")
+        toast.error(err.error || "Failed to save profile")
       }
     } catch (err) {
-      toast.error("Networking terminal error")
+      toast.error("Connection error")
     } finally {
       setSaving(false)
     }
@@ -109,30 +109,30 @@ export default function ProfilePage() {
     <div className="space-y-6 w-full pb-10 max-w-[1000px] mx-auto">
       <div className="flex items-center justify-between">
         <div className="space-y-1">
-          <h1 className="text-2xl font-bold tracking-tight text-white uppercase tracking-widest">Student Profile Terminal</h1>
-          <p className="text-muted-foreground text-sm font-light italic">Sync your institutional dossier for recruitment eligibility</p>
+          <h1 className="text-2xl font-bold tracking-tight text-white uppercase tracking-widest">My Profile</h1>
+          <p className="text-muted-foreground text-sm font-light italic">Update your details for job applications</p>
         </div>
         {formData.rollNumber && (
           <div className="hidden md:flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 text-xs font-black uppercase tracking-widest">
             <CheckCircle2 className="h-4 w-4" />
-            Verified Dossier
+            Verified Profile
           </div>
         )}
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-8">
-        {/* Core Dossier */}
+        {/* Basic Details */}
         <Card className="bg-white/5 border-white/5 shadow-2xl overflow-hidden">
           <CardHeader className="border-b border-white/5 bg-white/[0.02]">
              <div className="flex items-center gap-3">
                <User className="h-5 w-5 text-primary" />
-               <CardTitle className="text-sm font-black uppercase tracking-widest text-gray-400">Institutional Identity</CardTitle>
+               <CardTitle className="text-sm font-black uppercase tracking-widest text-gray-400">Personal Details</CardTitle>
              </div>
           </CardHeader>
           <CardContent className="p-8">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-6">
               <div className="space-y-2">
-                <Label className="text-[10px] uppercase font-black tracking-widest text-gray-500 pl-1">Legal Full Name</Label>
+                <Label className="text-[10px] uppercase font-black tracking-widest text-gray-500 pl-1">Full Name</Label>
                 <Input
                   placeholder="e.g., Rohan Sharma"
                   className="bg-white/[0.03] border-white/5 focus:border-primary/50 h-12 rounded-xl transition-all"
@@ -142,7 +142,7 @@ export default function ProfilePage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label className="text-[10px] uppercase font-black tracking-widest text-gray-500 pl-1">Institutional Roll Number</Label>
+                <Label className="text-[10px] uppercase font-black tracking-widest text-gray-500 pl-1">Roll Number</Label>
                 <Input
                   placeholder="210133..."
                   className="bg-white/[0.03] border-white/5 focus:border-primary/50 h-12 rounded-xl transition-all"
@@ -152,7 +152,7 @@ export default function ProfilePage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label className="text-[10px] uppercase font-black tracking-widest text-gray-500 pl-1">College ID Card No.</Label>
+                <Label className="text-[10px] uppercase font-black tracking-widest text-gray-500 pl-1">College ID</Label>
                 <Input
                   placeholder="RKGIT-..."
                   className="bg-white/[0.03] border-white/5 focus:border-primary/50 h-12 rounded-xl transition-all"
@@ -162,10 +162,10 @@ export default function ProfilePage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label className="text-[10px] uppercase font-black tracking-widest text-gray-500 pl-1">Department Major</Label>
+                <Label className="text-[10px] uppercase font-black tracking-widest text-gray-500 pl-1">Branch / Department</Label>
                 <Select value={formData.branch} onValueChange={(val) => setFormData({ ...formData, branch: val })}>
                   <SelectTrigger className="bg-white/[0.03] border-white/5 h-12 rounded-xl text-xs">
-                    <SelectValue placeholder="Identify your major" />
+                    <SelectValue placeholder="Select your branch" />
                   </SelectTrigger>
                   <SelectContent>
                     {branches.map(b => (
@@ -178,7 +178,7 @@ export default function ProfilePage() {
           </CardContent>
         </Card>
 
-        {/* Academic Eligibility Hub */}
+        {/* Academic Records */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <Card className="bg-white/5 border-white/5 shadow-2xl col-span-1">
              <CardHeader className="border-b border-white/5 bg-white/[0.01] p-4 text-center">
@@ -197,7 +197,7 @@ export default function ProfilePage() {
                   onChange={(e) => setFormData({ ...formData, cgpa: e.target.value })}
                   required
                 />
-                <p className="text-[9px] text-center text-gray-600 mt-3 font-bold uppercase tracking-widest">Strict Evaluation Gate</p>
+                <p className="text-[9px] text-center text-gray-600 mt-3 font-bold uppercase tracking-widest">Job eligibility criteria</p>
              </CardContent>
           </Card>
 
@@ -216,7 +216,7 @@ export default function ProfilePage() {
                   onChange={(e) => setFormData({ ...formData, activeBacklogs: e.target.value })}
                   required
                 />
-                <p className="text-[9px] text-center text-gray-600 mt-3 font-bold uppercase tracking-widest">Placement Barrier</p>
+                <p className="text-[9px] text-center text-gray-600 mt-3 font-bold uppercase tracking-widest">May affect eligibility</p>
              </CardContent>
           </Card>
 
@@ -233,16 +233,16 @@ export default function ProfilePage() {
                   onChange={(e) => setFormData({ ...formData, resumeUrl: e.target.value })}
                   required
                 />
-                <p className="text-[9px] text-center text-gray-600 mt-3 font-bold uppercase tracking-widest">Public Sharing Only</p>
+                <p className="text-[9px] text-center text-gray-600 mt-3 font-bold uppercase tracking-widest">Make sure the link is public</p>
              </CardContent>
           </Card>
         </div>
 
-        {/* Global Action Terminal */}
+        {/* Actions */}
         <div className="flex justify-center pt-6">
            <Button type="submit" disabled={saving} className="bg-primary hover:bg-primary/90 text-black font-black px-12 py-8 rounded-2xl text-xl shadow-2xl shadow-primary/20 transition-all hover:scale-105">
               {saving ? <Loader2 className="h-6 w-6 animate-spin mr-3" /> : <Save className="h-6 w-6 mr-3" />}
-              {saving ? "SYNCHRONIZING..." : "UPLOAD DOSSIER"}
+              {saving ? "SAVING..." : "SAVE PROFILE"}
            </Button>
         </div>
       </form>

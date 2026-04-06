@@ -56,7 +56,7 @@ export default function JobsPage() {
         setAppliedJobs(appliedIds)
       }
     } catch (err) {
-      toast.error("Failed to sync recruitment stream")
+      toast.error("Failed to load jobs")
     } finally {
       setIsLoading(false)
     }
@@ -73,7 +73,7 @@ export default function JobsPage() {
 
   const handleApply = async () => {
     if (!selectedJob || !profile?.resumeUrl) {
-      toast.error("Valid resume profile required for submission")
+      toast.error("Please upload your resume in your profile to apply")
       return
     }
 
@@ -98,7 +98,7 @@ export default function JobsPage() {
         toast.error(data.error || "Submission failed")
       }
     } catch (err) {
-      toast.error("Terminal networking error")
+      toast.error("Connection error")
     } finally {
       setIsApplying(false)
     }
@@ -121,8 +121,8 @@ export default function JobsPage() {
   return (
     <div className="space-y-6 w-full pb-10">
       <div>
-        <h1 className="text-2xl font-semibold text-foreground">Discovery Engine</h1>
-        <p className="text-muted-foreground mt-1 text-sm italic">Audit and engage with live recruitment pipelines</p>
+        <h1 className="text-2xl font-semibold text-foreground">Available Jobs</h1>
+        <p className="text-muted-foreground mt-1 text-sm italic">Search and apply for new job openings</p>
       </div>
 
       {/* Filters */}
@@ -132,7 +132,7 @@ export default function JobsPage() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search organizations or roles..."
+                placeholder="Search companies or job roles..."
                 className="pl-10 h-11 bg-white/5 border-white/10 rounded-xl"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -140,7 +140,7 @@ export default function JobsPage() {
             </div>
             <Select value={roleFilter} onValueChange={setRoleFilter}>
               <SelectTrigger className="w-full sm:w-48 h-11 rounded-xl">
-                <SelectValue placeholder="All Categories" />
+                <SelectValue placeholder="All Roles" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Roles</SelectItem>
@@ -167,7 +167,7 @@ export default function JobsPage() {
             return (
               <Card key={job.id} className="bg-card border-border hover:border-primary/20 transition-all group relative overflow-hidden">
                 <div className={`absolute top-0 right-0 p-1 px-3 text-[10px] font-black uppercase tracking-tighter ${eligible ? 'bg-emerald-500/10 text-emerald-500' : 'bg-destructive/10 text-destructive'}`}>
-                   {eligible ? 'Compatible' : 'Gate Closed'}
+                   {eligible ? 'Eligible' : 'Not Eligible'}
                 </div>
                 <CardHeader className="pb-4">
                   <div className="flex items-center gap-3">
@@ -207,11 +207,11 @@ export default function JobsPage() {
                       className="w-full rounded-xl h-11 bg-primary hover:bg-primary/90 shadow-lg shadow-primary/10"
                       onClick={() => setSelectedJob(job)}
                     >
-                      Instant Engagement
+                      Apply Now
                     </Button>
                   ) : (
                     <Button variant="outline" disabled className="w-full rounded-xl h-11 border-white/5 bg-transparent">
-                      <AlertCircle className="h-4 w-4 mr-2" /> Academic Mismatch
+                      <AlertCircle className="h-4 w-4 mr-2" /> Not Eligible
                     </Button>
                   )}
                 </CardContent>
@@ -225,7 +225,7 @@ export default function JobsPage() {
         <Card className="bg-card border-border border-dashed">
           <CardContent className="flex flex-col items-center justify-center py-20 opacity-40">
             <Briefcase className="h-16 w-16 text-muted-foreground mb-4" />
-            <p className="text-muted-foreground font-black uppercase tracking-[0.3em] text-xs">No Opportunity Detected</p>
+            <p className="text-muted-foreground font-black uppercase tracking-[0.3em] text-xs">No jobs found</p>
           </CardContent>
         </Card>
       )}
@@ -235,21 +235,21 @@ export default function JobsPage() {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold">Confirm Application</DialogTitle>
-            <DialogDescription>Submit your verified institutional profile and resume.</DialogDescription>
+            <DialogDescription>Submit your profile and resume to apply.</DialogDescription>
           </DialogHeader>
           <div className="space-y-6 pt-4">
             <Card className="bg-white/5 border-white/5">
               <CardContent className="p-4 space-y-4">
                 <div className="flex items-center justify-between">
-                   <p className="text-[10px] uppercase font-black tracking-widest text-gray-500">Applicant Identity</p>
-                   <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Verified Profile</span>
+                   <p className="text-[10px] uppercase font-black tracking-widest text-gray-500">Student Details</p>
+                   <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Profile Verified</span>
                 </div>
                 <div>
                    <p className="font-bold text-white tracking-tight">{profile?.fullName}</p>
                    <p className="text-xs text-gray-500">{profile?.branch} | {profile?.rollNumber}</p>
                 </div>
                 <div className="pt-4 border-t border-white/5">
-                   <p className="text-[10px] uppercase font-black tracking-widest text-gray-500 mb-2">Resume Payload</p>
+                   <p className="text-[10px] uppercase font-black tracking-widest text-gray-500 mb-2">Your Resume</p>
                    <div className="flex items-center gap-2 p-3 rounded-xl bg-white/[0.03] border border-white/5">
                       <div className="h-8 w-8 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-500">
                          <Search className="h-4 w-4" />
@@ -263,7 +263,7 @@ export default function JobsPage() {
             <div className="flex justify-end gap-3">
               <Button variant="ghost" onClick={() => setSelectedJob(null)} className="rounded-xl">Cancel</Button>
               <Button onClick={handleApply} disabled={isApplying} className="rounded-xl px-10 shadow-lg shadow-primary/20 bg-primary">
-                {isApplying ? <Loader2 className="h-4 w-4 animate-spin" /> : "Authorize Submission"}
+                {isApplying ? <Loader2 className="h-4 w-4 animate-spin" /> : "Apply Now"}
               </Button>
             </div>
           </div>

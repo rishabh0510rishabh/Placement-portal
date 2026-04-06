@@ -105,7 +105,7 @@ export async function POST(req: NextRequest) {
           id: crypto.randomUUID(),
           userId: student.id,
           title: 'New Job Posting!',
-          message: `${newJob.company.name} is hiring for ${newJob.role}! Check eligibility and apply now.`,
+          message: `${newJob.company.name} is hiring for ${newJob.role}! Check eligibility criteria and apply now.`,
           type: 'job_alert',
           link: `/student/jobs/${newJob.id}`,
         }));
@@ -113,7 +113,7 @@ export async function POST(req: NextRequest) {
         await supabase.from('Notification').insert(notifications);
       }
     } catch (notifError) {
-      console.error('Failed to create broadcast notifications for new job over HTTPS:', notifError);
+      console.error('Failed to create job notifications for new job over HTTPS:', notifError);
     }
 
     return NextResponse.json({ message: 'Job listing created over HTTPS successfully', job: newJob }, { status: 201 });
