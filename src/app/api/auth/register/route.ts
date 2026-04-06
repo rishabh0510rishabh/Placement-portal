@@ -85,7 +85,9 @@ export async function POST(req: NextRequest) {
         branch: 'Other', // Default
         rollNumber: 'NOT_SET',
         collegeId: 'NOT_SET',
-        phoneNumber: 'NOT_SET'
+        phoneNumber: 'NOT_SET',
+        createdAt: now,
+        updatedAt: now,
       });
 
     if (profileError) {

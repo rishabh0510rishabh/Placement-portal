@@ -48,7 +48,10 @@ export async function PATCH(req: NextRequest) {
     // 2. Update status via HTTPS SDK
     const { data: updated, error } = await supabase
       .from('JobApplication')
-      .update({ status })
+      .update({ 
+        status,
+        updatedAt: new Date().toISOString()
+      })
       .eq('id', id)
       .select()
       .single();

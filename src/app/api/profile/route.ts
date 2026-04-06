@@ -62,11 +62,21 @@ export async function POST(req: NextRequest) {
   } = body;
 
   try {
-    // 2. Saving via Supabase HTTPS SDK (Instant Write over Port 443)
+    // 2. Fetch existing profile ID to keep it stable during upsert
+    const { data: existing } = await supabase
+      .from('StudentProfile')
+      .select('id')
+      .eq('userId', userId)
+      .single();
+
+    const profileId = existing?.id || crypto.randomUUID();
+
+    // 3. Saving via Supabase HTTPS SDK (Instant Write over Port 443)
     // Using onConflict: 'userId' ensures we update if profile exists, otherwise insert.
     const { data: profile, error } = await supabase
       .from('StudentProfile')
       .upsert({ 
+        id: profileId,
         userId, 
         fullName, 
         rollNumber, 
@@ -78,7 +88,8 @@ export async function POST(req: NextRequest) {
         currentSemester,
         cgpa,
         activeBacklogs,
-        resumeUrl
+        resumeUrl,
+        updatedAt: new Date().toISOString()
       }, { onConflict: 'userId' })
       .select()
       .single();

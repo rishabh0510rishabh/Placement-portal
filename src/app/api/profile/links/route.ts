@@ -16,7 +16,13 @@ export async function POST(req: NextRequest) {
   try {
     const { error } = await supabase
       .from('StudentProfile')
-      .update({ linkedin, github, leetcode, portfolio })
+      .update({ 
+        linkedin, 
+        github, 
+        leetcode, 
+        portfolio,
+        updatedAt: new Date().toISOString()
+      })
       .eq('userId', userId);
 
     if (error) throw error;

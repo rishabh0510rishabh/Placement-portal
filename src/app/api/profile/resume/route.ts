@@ -19,7 +19,8 @@ export async function POST(req: NextRequest) {
       .update({
         resumeUrl,
         resumeFilename,
-        resumeUploadedAt: new Date().toISOString()
+        resumeUploadedAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       })
       .eq('userId', userId)
       .select()
@@ -49,7 +50,8 @@ export async function DELETE(req: NextRequest) {
       .update({
         resumeUrl: null,
         resumeFilename: null,
-        resumeUploadedAt: null
+        resumeUploadedAt: null,
+        updatedAt: new Date().toISOString()
       })
       .eq('userId', userId)
       .select()

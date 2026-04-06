@@ -27,6 +27,8 @@ export async function POST(req: NextRequest) {
           userId: userId,
           fullName: session.user?.name || 'Student',
           email: session.user?.email || '',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
         })
         .select('id')
         .single();
@@ -40,7 +42,10 @@ export async function POST(req: NextRequest) {
     // 1. Update the student profile's skills JSON field via HTTPS
     const { error } = await supabase
       .from('StudentProfile')
-      .update({ skills })
+      .update({ 
+        skills,
+        updatedAt: new Date().toISOString()
+      })
       .eq('id', profile.id);
 
     if (error) throw error;

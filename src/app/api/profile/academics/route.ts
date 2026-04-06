@@ -28,6 +28,8 @@ export async function POST(req: NextRequest) {
           userId: userId,
           fullName: session.user?.name || 'Student',
           email: session.user?.email || '',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
         })
         .select('id')
         .single();
@@ -41,7 +43,10 @@ export async function POST(req: NextRequest) {
     // 2. Update overall CGPA in profile
     const { error: updateError } = await supabase
       .from('StudentProfile')
-      .update({ cgpa: cgpa || 0 })
+      .update({ 
+        cgpa: cgpa || 0,
+        updatedAt: new Date().toISOString()
+      })
       .eq('id', profile.id);
 
     if (updateError) throw updateError;

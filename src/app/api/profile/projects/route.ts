@@ -29,6 +29,8 @@ export async function POST(req: NextRequest) {
           userId: userId,
           fullName: session.user?.name || 'Student',
           email: session.user?.email || '',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
         })
         .select('id')
         .single();
