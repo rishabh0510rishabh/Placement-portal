@@ -18,9 +18,11 @@ export async function GET(req: NextRequest) {
       .from('JobApplication')
       .select(`
         *,
-        student:StudentProfile(fullName, email),
+        student:StudentProfile(fullName, email, skills),
         job:JobListing(
           role,
+          minimumCgpa,
+          requiredSkills,
           company:Company(name)
         )
       `)

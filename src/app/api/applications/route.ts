@@ -113,6 +113,8 @@ export async function GET(req: NextRequest) {
           role,
           location,
           salaryCtc,
+          minimumCgpa,
+          requiredSkills,
           company:Company(name)
         )
       `)

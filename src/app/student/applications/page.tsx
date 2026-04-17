@@ -1,15 +1,13 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { ClipboardList, Building2, Calendar, Search, Loader2 } from "lucide-react"
+import { ClipboardList, Calendar, Search, Loader2 } from "lucide-react"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
-
-type ApplicationStatus = "applied" | "shortlisted" | "interviewing" | "rejected" | "hired"
 
 const statusConfig: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" | "success" }> = {
   applied: { label: "Applied", variant: "secondary" },
@@ -82,8 +80,8 @@ export default function ApplicationsPage() {
           <p className="text-gray-400 mt-1 font-light tracking-wide italic">Track your job applications and status</p>
         </div>
         <div className="flex items-center gap-3">
-           <div className="h-2 w-2 rounded-full bg-blue-500 animate-pulse" />
-           <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest bg-white/5 px-3 py-1.5 rounded-full border border-white/10">Tracker Active</span>
+          <div className="h-2 w-2 rounded-full bg-blue-500 animate-pulse" />
+          <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest bg-white/5 px-3 py-1.5 rounded-full border border-white/10">Tracker Active</span>
         </div>
       </div>
 
@@ -135,8 +133,8 @@ export default function ApplicationsPage() {
       {/* Applications List */}
       {isLoading ? (
         <div className="flex flex-col items-center justify-center py-24 gap-4 opacity-50">
-           <Loader2 className="h-10 w-10 animate-spin text-primary" />
-           <p className="text-xs font-black uppercase tracking-[0.2em]">Loading applications...</p>
+          <Loader2 className="h-10 w-10 animate-spin text-primary" />
+          <p className="text-xs font-black uppercase tracking-[0.2em]">Loading applications...</p>
         </div>
       ) : filteredApplications.length === 0 ? (
         <Card className="bg-white/5 border-white/10 border-dashed shadow-xl">
@@ -168,8 +166,8 @@ export default function ApplicationsPage() {
                   </div>
                   <div className="flex items-center justify-between sm:justify-end gap-6 border-t border-white/5 sm:border-0 pt-4 sm:pt-0">
                     <div className="text-right hidden md:block mr-2">
-                       <p className="text-sm font-bold text-gray-400">{app.job?.salaryCtc}</p>
-                       <p className="text-[9px] font-black text-gray-600 uppercase tracking-tighter">Salary / Package</p>
+                      <p className="text-sm font-bold text-gray-400">{app.job?.salaryCtc}</p>
+                      <p className="text-[9px] font-black text-gray-600 uppercase tracking-tighter">Salary / Package</p>
                     </div>
                     <Badge className={cn("px-4 py-1.5 rounded-full border font-black text-[10px] uppercase tracking-[0.1em] shadow-sm", getStatusColor(app.status))}>
                       {statusConfig[app.status]?.label || app.status}
@@ -184,4 +182,3 @@ export default function ApplicationsPage() {
     </div>
   )
 }
-
