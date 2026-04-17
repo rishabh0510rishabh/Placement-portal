@@ -19,7 +19,8 @@ import {
   Bell,
   LogOut,
   Menu,
-  X
+  X,
+  Map
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useState } from "react"
@@ -35,6 +36,7 @@ const menuItems = [
   { label: "Resume Management", href: "/student/resume", icon: FileText },
   { label: "Job Listings", href: "/student/jobs", icon: Building2 },
   { label: "Applications", href: "/student/applications", icon: ClipboardList },
+  { label: "Roadmaps", href: "/student/roadmaps", icon: Map },
   { label: "Notifications", href: "/student/notifications", icon: Bell },
 ]
 
