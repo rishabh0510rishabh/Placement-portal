@@ -25,21 +25,12 @@ export const authOptions: AuthOptions = {
           .eq('email', lowerEmail)
           .single();
 
-        // 2. Handle demo bypass
-        if (credentials.password === 'password123') {
-           if (user) {
-             return { id: user.id, name: user.name, email: user.email, role: user.role };
-           }
-           // Fallback for extreme cases
-           if (lowerEmail === 'admin@rkgit.edu.in') return { id: 'demo-admin-id', role: 'admin' };
-           return { id: 'demo-student-id', role: 'student' };
-        }
-
-        // 3. Standard Login
+        // 2. Verify user exists
         if (!user || !user.password) {
           throw new Error('No account found with this email address.');
         }
 
+        // 3. Verify password against stored hash
         const isValid = await bcrypt.compare(credentials.password, user.password);
         if (!isValid) throw new Error('Incorrect password.');
 
