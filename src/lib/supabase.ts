@@ -1,10 +1,13 @@
 import { createClient } from '@supabase/supabase-js'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY || ''
+const supabaseKey =
+  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY ||
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+  ''
 
 if (!supabaseUrl || !supabaseKey) {
-  console.warn('Supabase credentials missing in .env.local')
+  console.warn('Supabase credentials missing in .env')
 }
 
 // Fixed-base HTTPS Client (Bypasses Port 5432 / 6543 blocks)
